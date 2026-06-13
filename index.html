@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trip Expenses</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-copy">
+          <p class="eyebrow">UK trip tracker</p>
+          <h1>Trip Expenses</h1>
+          <div class="trip-meta" aria-label="Trip settings">
+            <span>Shared across devices</span>
+            <span id="cloudStatus">Cloud sync ready</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="button primary toggle-button" id="currencyToggle" type="button">View in BHD</button>
+          <div class="quick-actions">
+            <button class="button secondary" id="seedDemo" type="button">Load sample</button>
+            <button class="button secondary" id="exportCsv" type="button">Export CSV</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="entry-panel" aria-labelledby="entry-title">
+          <div class="section-heading">
+            <h2 id="entry-title">Log an expense</h2>
+            <div class="heading-actions">
+              <span id="editingBadge" class="badge hidden">Editing</span>
+              <button class="modal-close" id="closeExpenseModal" type="button" aria-label="Close expense form">Close</button>
+            </div>
+          </div>
+
+          <form id="expenseForm" class="expense-form">
+            <input id="editingId" type="hidden" />
+
+            <label>
+              <span>Date</span>
+              <input id="date" name="date" type="date" required />
+            </label>
+
+            <label>
+              <span>Merchant</span>
+              <input id="merchant" name="merchant" type="text" placeholder="Pret, TfL, hotel..." required />
+            </label>
+
+            <label>
+              <span>Amount in GBP</span>
+              <input id="amount" name="amount" min="0.01" step="0.01" type="number" placeholder="0.00" required />
+            </label>
+
+            <label>
+              <span>Paid by</span>
+              <select id="paidBy" name="paidBy" required>
+                <option value="Hasan">Hasan</option>
+                <option value="Husain">Husain</option>
+              </select>
+            </label>
+
+            <div class="two-col">
+              <label>
+                <span>Category</span>
+                <select id="category" name="category" required>
+                  <option value="Food">Food</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Hotel">Hotel</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Attractions">Attractions</option>
+                  <option value="Groceries">Groceries</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Payment</span>
+                <select id="payment" name="payment">
+                  <option value="Card">Card</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Apple Pay">Apple Pay</option>
+                  <option value="Bank transfer">Bank transfer</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              <span>Notes</span>
+              <textarea id="notes" name="notes" rows="3" placeholder="Optional details"></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button class="button primary" type="submit">Save expense</button>
+              <button class="button secondary" id="cancelEdit" type="button">Cancel</button>
+            </div>
+          </form>
+
+          <div class="settings">
+            <label>
+              <span>Trip budget in GBP</span>
+              <input id="budget" type="number" min="0" step="1" placeholder="Optional" />
+            </label>
+            <div class="rate-card">
+              <div>
+                <span class="field-label">Home currency</span>
+                <strong>BHD</strong>
+                <small id="rateStatus">Fetching GBP to BHD rate...</small>
+              </div>
+              <button class="button secondary" id="refreshRate" type="button">Refresh rate</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard" aria-label="Expense dashboard">
+          <div class="summary-grid">
+            <article class="metric metric-primary">
+              <span>Total spend</span>
+              <strong id="totalSpend">GBP 0.00</strong>
+              <small id="homeSpend">BHD rate loading</small>
+            </article>
+            <article class="metric">
+              <span>Hasan paid</span>
+              <strong id="hasanPaid">GBP 0.00</strong>
+              <small id="hasanShare">0% of spending</small>
+            </article>
+            <article class="metric">
+              <span>Husain paid</span>
+              <strong id="husainPaid">GBP 0.00</strong>
+              <small id="husainShare">0% of spending</small>
+            </article>
+            <article class="metric">
+              <span>Settle up</span>
+              <strong id="settlementSummary">Even</strong>
+              <small id="settlementDetail">No split needed</small>
+            </article>
+          </div>
+
+          <nav class="payer-tabs" aria-label="Filter expenses by payer">
+            <button class="active" type="button" data-payer="All">All spending</button>
+            <button type="button" data-payer="Hasan">Hasan paid</button>
+            <button type="button" data-payer="Husain">Husain paid</button>
+          </nav>
+
+          <div class="dashboard-grid">
+            <article class="panel category-panel">
+              <div class="section-heading">
+                <h2>By category</h2>
+                <span id="expenseCount" class="badge">0 expenses</span>
+              </div>
+              <div id="categoryChart" class="bar-chart empty-state">No expenses yet</div>
+            </article>
+
+            <div class="side-stack">
+              <article class="panel split-panel">
+                <div class="section-heading">
+                  <h2>Split summary</h2>
+                  <span id="fairShareLabel" class="badge">Each share</span>
+                </div>
+                <div class="split-list">
+                  <div>
+                    <span>Hasan balance</span>
+                    <strong id="hasanBalance">Even</strong>
+                  </div>
+                  <div>
+                    <span>Husain balance</span>
+                    <strong id="husainBalance">Even</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel">
+                <div class="section-heading">
+                  <h2>Budget</h2>
+                  <span id="budgetLabel" class="badge">Optional</span>
+                </div>
+                <div class="progress">
+                  <div id="budgetProgress" class="progress-fill"></div>
+                </div>
+                <p id="budgetText" class="panel-note">Add a trip budget to track remaining spend.</p>
+              </article>
+            </div>
+          </div>
+
+          <section class="panel" aria-labelledby="list-title">
+            <div class="section-heading list-heading">
+              <div>
+                <h2 id="list-title">Payments</h2>
+                <p>Search, filter, edit, or remove logged expenses.</p>
+              </div>
+              <div class="filters">
+                <input id="search" type="search" placeholder="Search merchant or notes" />
+                <select id="categoryFilter">
+                  <option value="All">All categories</option>
+                </select>
+                <select id="paymentFilter">
+                  <option value="All">All payments</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Merchant</th>
+                    <th>Category</th>
+                    <th>Paid by</th>
+                    <th>Payment</th>
+                    <th id="amountHeader" class="amount-cell">GBP amount</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="expenseRows">
+                  <tr>
+                    <td colspan="7" class="empty-table">No expenses logged yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <button class="mobile-fab" id="openExpenseModal" type="button">Log expense</button>
+    <div class="modal-backdrop" id="expenseModalBackdrop"></div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "trip-expense-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.2.0"
+  },
+  "scripts": {
+    "test": "node tests/smoke.test.cjs"
+  }
+}
