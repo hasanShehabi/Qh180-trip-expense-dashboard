@@ -1,9 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="auto">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#eef3f8" />
     <title>Trip Expenses</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -12,9 +19,10 @@
         <div class="topbar-copy">
           <p class="eyebrow">UK trip tracker</p>
           <h1>Trip Expenses</h1>
+          <p class="topbar-note">A shared travel ledger for quick payments, fair splits, and BHD context.</p>
           <div class="trip-meta" aria-label="Trip settings">
             <span>Shared across devices</span>
-            <span id="cloudStatus">Cloud sync ready</span>
+            <span id="cloudStatus" aria-live="polite">Cloud sync ready</span>
           </div>
         </div>
       </header>
@@ -114,12 +122,12 @@
               <strong id="totalSpend">GBP 0.00</strong>
               <small id="homeSpend">BHD rate loading</small>
             </article>
-            <article class="metric">
+            <article class="metric metric-hasan">
               <span>Hasan paid</span>
               <strong id="hasanPaid">GBP 0.00</strong>
               <small id="hasanShare">0% of spending</small>
             </article>
-            <article class="metric">
+            <article class="metric metric-husain">
               <span>Husain paid</span>
               <strong id="husainPaid">GBP 0.00</strong>
               <small id="husainShare">0% of spending</small>
