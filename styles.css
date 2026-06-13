@@ -222,7 +222,7 @@ textarea,
   width: min(1440px, 100%);
   margin: 0 auto;
   padding: var(--space-4);
-  animation: page-in 420ms ease both;
+  animation: page-in 420ms ease;
 }
 
 .topbar {
@@ -461,7 +461,7 @@ textarea,
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 35;
+  z-index: 900;
   background: rgba(12, 20, 33, 0.54);
   backdrop-filter: blur(10px);
   opacity: 0;
@@ -471,6 +471,11 @@ textarea,
 
 body.expense-modal-open {
   overflow: hidden;
+}
+
+body.expense-modal-open .app-shell {
+  animation: none;
+  transform: none;
 }
 
 body.expense-modal-open .modal-backdrop {
@@ -488,7 +493,7 @@ body.expense-modal-open .modal-close {
 body.expense-modal-open .entry-panel {
   position: fixed;
   inset: auto var(--space-3) max(var(--space-3), env(safe-area-inset-bottom)) var(--space-3);
-  z-index: 40;
+  z-index: 1000;
   display: block;
   max-height: calc(100dvh - 1.5rem);
   overflow-y: auto;
@@ -1413,7 +1418,7 @@ td[data-label="Merchant"] > small {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -1424,7 +1429,7 @@ td[data-label="Merchant"] > small {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -1435,6 +1440,6 @@ td[data-label="Merchant"] > small {
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
   }
 }

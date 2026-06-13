@@ -138,6 +138,9 @@ test("keeps mobile expense modal support", () => {
   assertIncludes(cssSource, ".mobile-fab");
   assertIncludes(cssSource, "body.expense-modal-open .entry-panel");
   assert.ok(cssSource.indexOf("body.expense-modal-open .entry-panel") < cssSource.indexOf("@media (max-width: 1099px)"));
+  assertIncludes(cssSource, "body.expense-modal-open .app-shell");
+  assertIncludes(cssSource, "z-index: 900");
+  assertIncludes(cssSource, "z-index: 1000");
 });
 
 test("keeps theme media query listener from breaking older mobile browsers", () => {
