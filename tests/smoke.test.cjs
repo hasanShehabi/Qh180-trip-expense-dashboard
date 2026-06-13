@@ -37,6 +37,19 @@ test("supports Hasan and Husain as payers", () => {
   assertIncludes(appSource, 'paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan"');
 });
 
+test("supports prepaid flight and hotel costs outside the spending budget", () => {
+  assertIncludes(appSource, '"Flight"');
+  assertIncludes(htmlSource, '<option value="Flight">Flight</option>');
+  assertIncludes(htmlSource, 'id="excludeFromBudget"');
+  assertIncludes(htmlSource, "Exclude from spending budget");
+  assertIncludes(appSource, "excludeFromBudget: els.excludeFromBudget.checked");
+  assertIncludes(appSource, 'els.category.addEventListener("change", syncBudgetExclusion)');
+  assertIncludes(appSource, '["Flight", "Hotel"].includes(els.category.value)');
+  assertIncludes(appSource, "const budgetSpend = totals.budgetGbp");
+  assertIncludes(appSource, "summary.excludedGbp += gbp");
+  assertIncludes(appSource, "Outside budget");
+});
+
 test("keeps BHD conversion visible without a currency toggle", () => {
   assertIncludes(appSource, 'const HOME_CURRENCY = "BHD"');
   assertIncludes(appSource, 'const BASE_CURRENCY = "GBP"');
@@ -107,6 +120,7 @@ test("keeps mobile transaction card support", () => {
 
 test("keeps mobile expense modal support", () => {
   assertIncludes(htmlSource, 'id="openExpenseModal"');
+  assertIncludes(htmlSource, 'id="openExpenseModal" type="button" aria-label="Log expense">+</button>');
   assertIncludes(htmlSource, 'id="closeExpenseModal"');
   assertIncludes(htmlSource, 'id="expenseModalBackdrop"');
   assertIncludes(appSource, "function openExpenseModal()");

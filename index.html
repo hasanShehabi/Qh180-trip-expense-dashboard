@@ -69,6 +69,7 @@
                 <select id="category" name="category" required>
                   <option value="Food">Food</option>
                   <option value="Transport">Transport</option>
+                  <option value="Flight">Flight</option>
                   <option value="Hotel">Hotel</option>
                   <option value="Shopping">Shopping</option>
                   <option value="Attractions">Attractions</option>
@@ -87,6 +88,14 @@
                 </select>
               </label>
             </div>
+
+            <label class="check-row">
+              <input id="excludeFromBudget" name="excludeFromBudget" type="checkbox" />
+              <span>
+                Exclude from spending budget
+                <small>Use this for prepaid hotel, flights, or big trip costs you still want in the split.</small>
+              </span>
+            </label>
 
             <label>
               <span>Notes</span>
@@ -227,7 +236,7 @@
       </main>
     </div>
 
-    <button class="mobile-fab" id="openExpenseModal" type="button">Log expense</button>
+    <button class="mobile-fab" id="openExpenseModal" type="button" aria-label="Log expense">+</button>
     <div class="modal-backdrop" id="expenseModalBackdrop"></div>
 
     <script src="./app.js"></script>

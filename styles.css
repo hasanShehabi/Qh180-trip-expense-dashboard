@@ -500,6 +500,36 @@ label {
   font-weight: 750;
 }
 
+.check-row {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--warn) 8%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface-1) 72%, transparent);
+  color: var(--text);
+  padding: var(--space-3);
+}
+
+.check-row input {
+  width: 1.15rem;
+  min-height: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.18rem;
+  accent-color: var(--brand);
+}
+
+.check-row small {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .field-label {
   display: block;
   color: var(--muted);
@@ -924,6 +954,10 @@ td[data-label="Merchant"] > small {
   font-weight: 650;
 }
 
+.amount-cell .budget-note {
+  color: var(--warn);
+}
+
 .category-pill,
 .person-pill,
 .payment-pill {
@@ -952,6 +986,11 @@ td[data-label="Merchant"] > small {
 .category-pill[data-category="Transport"] {
   background: var(--brand-soft);
   color: var(--brand-dark);
+}
+
+.category-pill[data-category="Flight"] {
+  background: var(--warn-soft);
+  color: var(--warn);
 }
 
 .category-pill[data-category="Hotel"] {
@@ -1028,6 +1067,7 @@ td[data-label="Merchant"] > small {
 
 .empty-table {
   display: block;
+  grid-column: 1 / -1;
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--surface-1) 66%, transparent);
@@ -1077,16 +1117,6 @@ td[data-label="Merchant"] > small {
     padding: var(--space-7);
   }
 
-  .layout {
-    grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr);
-    gap: var(--space-5);
-  }
-
-  .entry-panel {
-    position: sticky;
-    top: var(--space-5);
-  }
-
   .dashboard-grid {
     grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
   }
@@ -1105,27 +1135,40 @@ td[data-label="Merchant"] > small {
   }
 
   table {
-    display: table;
+    display: block;
     width: 100%;
-    table-layout: auto;
   }
 
   thead {
-    display: table-header-group;
+    display: block;
   }
 
   tbody {
-    display: table-row-group;
+    display: grid;
+    gap: var(--space-2);
   }
 
-  tr {
-    display: table-row;
+  thead tr,
+  tbody tr {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 0.72fr)
+      minmax(0, 1.38fr)
+      minmax(0, 0.82fr)
+      minmax(0, 0.78fr)
+      minmax(0, 0.82fr)
+      minmax(0, 1fr)
+      minmax(0, 0.82fr);
+    gap: 0;
+    align-items: center;
   }
 
   th,
   td {
-    display: table-cell;
-    padding: 0.95rem 0.7rem;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0.82rem 0.6rem;
   }
 
   th {
@@ -1137,32 +1180,24 @@ td[data-label="Merchant"] > small {
   }
 
   tbody tr {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--surface-0) 84%, transparent);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
     padding: 0;
   }
 
   tbody tr:hover {
-    box-shadow: none;
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-soft);
     transform: none;
   }
 
   td {
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    background: color-mix(in srgb, var(--surface-0) 84%, transparent);
+    border: 0;
+    background: transparent;
     text-align: left;
-  }
-
-  td:first-child {
-    border-left: 1px solid var(--line);
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
-  }
-
-  td:last-child {
-    border-right: 1px solid var(--line);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
   }
 
   td::before {
@@ -1175,6 +1210,7 @@ td[data-label="Merchant"] > small {
   }
 
   .amount-cell {
+    justify-content: flex-end;
     text-align: right;
   }
 
@@ -1186,6 +1222,10 @@ td[data-label="Merchant"] > small {
 
   .link-button {
     min-height: 2.25rem;
+  }
+
+  td[data-label="Actions"] {
+    justify-content: flex-end;
   }
 
   .bar-row {
@@ -1206,6 +1246,12 @@ td[data-label="Merchant"] > small {
 @media (min-width: 1180px) {
   .layout {
     grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .entry-panel {
+    position: sticky;
+    top: var(--space-5);
   }
 }
 
@@ -1251,14 +1297,17 @@ td[data-label="Merchant"] > small {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 3.5rem;
     min-height: 3.5rem;
     border: 1px solid color-mix(in srgb, var(--brand) 18%, transparent);
     border-radius: var(--radius-pill);
     background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 74%, var(--hasan)));
     box-shadow: 0 18px 38px color-mix(in srgb, var(--brand) 22%, transparent);
     color: #ffffff;
+    font-size: 2rem;
     font-weight: 900;
-    padding: 0 var(--space-5);
+    line-height: 1;
+    padding: 0;
   }
 
   .modal-backdrop {

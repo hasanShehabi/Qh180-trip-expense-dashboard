@@ -8,6 +8,7 @@ const RATE_API_URL = "https://api.frankfurter.dev/v2/rate/GBP/BHD";
 const categories = [
   "Food",
   "Transport",
+  "Flight",
   "Hotel",
   "Shopping",
   "Attractions",
@@ -20,6 +21,7 @@ const people = ["Hasan", "Husain"];
 
 const categoryHints = [
   { category: "Transport", words: ["tfl", "tube", "uber", "train", "rail", "bus", "taxi", "gatwick", "heathrow"] },
+  { category: "Flight", words: ["flight", "airline", "british airways", "ba ", "gulf air", "easyjet", "ryanair", "ticket"] },
   { category: "Food", words: ["pret", "costa", "nero", "restaurant", "cafe", "coffee", "lunch", "dinner"] },
   { category: "Hotel", words: ["hotel", "airbnb", "booking", "stay", "inn"] },
   { category: "Shopping", words: ["boots", "primark", "selfridges", "harrods", "zara", "uniqlo"] },
@@ -43,6 +45,7 @@ const state = {
 state.expenses = state.expenses.map((expense) => ({
   ...expense,
   paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
+  excludeFromBudget: Boolean(expense.excludeFromBudget),
 }));
 
 const els = {
@@ -55,6 +58,7 @@ const els = {
   paidBy: document.querySelector("#paidBy"),
   category: document.querySelector("#category"),
   payment: document.querySelector("#payment"),
+  excludeFromBudget: document.querySelector("#excludeFromBudget"),
   notes: document.querySelector("#notes"),
   budget: document.querySelector("#budget"),
   refreshRate: document.querySelector("#refreshRate"),
@@ -121,6 +125,7 @@ function bindEvents() {
   });
   els.merchant.addEventListener("input", suggestCategory);
   els.notes.addEventListener("input", suggestCategory);
+  els.category.addEventListener("change", syncBudgetExclusion);
   els.budget.addEventListener("input", saveSettings);
   els.refreshRate.addEventListener("click", () => refreshExchangeRate({ silent: false }));
   els.search.addEventListener("input", () => {
@@ -155,6 +160,7 @@ function saveExpense(event) {
     paidBy: els.paidBy.value,
     category: els.category.value,
     payment: els.payment.value,
+    excludeFromBudget: els.excludeFromBudget.checked,
     notes: els.notes.value.trim(),
   };
 
@@ -180,7 +186,10 @@ function suggestCategory() {
   const match = categoryHints.find((hint) =>
     hint.words.some((word) => haystack.includes(word)),
   );
-  if (match) els.category.value = match.category;
+  if (match) {
+    els.category.value = match.category;
+    syncBudgetExclusion();
+  }
 }
 
 function saveSettings() {
@@ -231,6 +240,8 @@ function render() {
 function renderMetrics(totals) {
   const budget = Number(state.settings.budget);
   const exchangeRate = Number(state.settings.exchangeRate);
+  const budgetSpend = totals.budgetGbp;
+  const excludedSpend = totals.excludedGbp;
   const hasanPaid = totals.byPayer.Hasan || 0;
   const husainPaid = totals.byPayer.Husain || 0;
   const hasanPercent = totals.totalGbp ? Math.round((hasanPaid / totals.totalGbp) * 100) : 0;
@@ -254,13 +265,16 @@ function renderMetrics(totals) {
   els.amountHeader.textContent = `${getDisplayCurrency()} amount`;
 
   if (budget > 0) {
-    const used = (totals.totalGbp / budget) * 100;
-    const remaining = budget - totals.totalGbp;
+    const used = (budgetSpend / budget) * 100;
+    const remaining = budget - budgetSpend;
+    const excludedLabel = excludedSpend
+      ? ` ${formatDisplayMoney(excludedSpend)} prepaid outside budget.`
+      : "";
     els.budgetProgress.style.width = `${Math.min(used, 100)}%`;
     els.budgetText.textContent =
       remaining >= 0
-        ? `${formatDisplayMoney(totals.totalGbp)} of ${formatDisplayMoney(budget)} used. ${formatDisplayMoney(remaining)} remaining.`
-        : `${formatDisplayMoney(totals.totalGbp)} of ${formatDisplayMoney(budget)} used. ${formatDisplayMoney(Math.abs(remaining))} over budget.`;
+        ? `${formatDisplayMoney(budgetSpend)} of ${formatDisplayMoney(budget)} used. ${formatDisplayMoney(remaining)} remaining.${excludedLabel}`
+        : `${formatDisplayMoney(budgetSpend)} of ${formatDisplayMoney(budget)} used. ${formatDisplayMoney(Math.abs(remaining))} over budget.${excludedLabel}`;
     els.budgetLabel.textContent = formatDisplayMoney(budget);
   } else {
     els.budgetProgress.style.width = "0%";
@@ -330,6 +344,7 @@ function renderRows(expenses) {
           <td class="amount-cell" data-label="${getDisplayCurrency()} amount">
             <strong>${formatDisplayMoney(expense.amount)}</strong>
             ${exchangeRate ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>` : ""}
+            ${expense.excludeFromBudget ? `<br><small class="budget-note">Outside budget</small>` : ""}
           </td>
           <td data-label="Actions">
             <div class="row-actions">
@@ -375,6 +390,7 @@ function handleRowAction(event) {
   els.paidBy.value = people.includes(expense.paidBy) ? expense.paidBy : "Hasan";
   els.category.value = expense.category;
   els.payment.value = expense.payment;
+  els.excludeFromBudget.checked = Boolean(expense.excludeFromBudget);
   els.notes.value = expense.notes || "";
   els.editingBadge.classList.remove("hidden");
   openExpenseModal();
@@ -388,7 +404,13 @@ function resetForm() {
   els.paidBy.value = "Hasan";
   els.category.value = "Food";
   els.payment.value = "Card";
+  els.excludeFromBudget.checked = false;
   els.editingBadge.classList.add("hidden");
+}
+
+function syncBudgetExclusion() {
+  if (els.editingId.value) return;
+  els.excludeFromBudget.checked = ["Flight", "Hotel"].includes(els.category.value);
 }
 
 function openExpenseModal() {
@@ -419,11 +441,16 @@ function getTotals(expenses) {
       const gbp = Number(expense.amount) || 0;
       const paidBy = people.includes(expense.paidBy) ? expense.paidBy : "Hasan";
       summary.totalGbp += gbp;
+      if (expense.excludeFromBudget) {
+        summary.excludedGbp += gbp;
+      } else {
+        summary.budgetGbp += gbp;
+      }
       summary.byCategory[expense.category] = (summary.byCategory[expense.category] || 0) + gbp;
       summary.byPayer[paidBy] = (summary.byPayer[paidBy] || 0) + gbp;
       return summary;
     },
-    { totalGbp: 0, byCategory: {}, byPayer: { Hasan: 0, Husain: 0 } },
+    { totalGbp: 0, budgetGbp: 0, excludedGbp: 0, byCategory: {}, byPayer: { Hasan: 0, Husain: 0 } },
   );
 }
 
@@ -541,6 +568,7 @@ function normalizeExpenses(expenses) {
   return (Array.isArray(expenses) ? expenses : []).map((expense) => ({
     ...expense,
     paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
+    excludeFromBudget: Boolean(expense.excludeFromBudget),
   }));
 }
 
