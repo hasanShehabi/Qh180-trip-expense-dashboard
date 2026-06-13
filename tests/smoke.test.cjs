@@ -112,10 +112,18 @@ test("keeps mobile transaction card support", () => {
   assertIncludes(appSource, 'data-label="Merchant"');
   assertIncludes(appSource, 'data-label="Paid by"');
   assertIncludes(appSource, 'data-label="${getDisplayCurrency()} amount"');
-  assertIncludes(cssSource, "@media (max-width: 760px)");
+  assertIncludes(cssSource, "@media (max-width: 1099px)");
   assertIncludes(cssSource, "td::before");
   assertIncludes(cssSource, "content: attr(data-label)");
   assertIncludes(cssSource, "@media (max-width: 460px)");
+});
+
+test("keeps desktop payment rows from clipping stacked amounts", () => {
+  assertIncludes(cssSource, "@media (min-width: 1100px)");
+  assertIncludes(cssSource, "flex-direction: column");
+  assertIncludes(cssSource, ".amount-cell br");
+  assertIncludes(cssSource, "display: none");
+  assertIncludes(cssSource, "@media (min-width: 1440px)");
 });
 
 test("keeps mobile expense modal support", () => {

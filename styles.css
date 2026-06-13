@@ -1112,7 +1112,7 @@ td[data-label="Merchant"] > small {
   }
 }
 
-@media (min-width: 860px) {
+@media (min-width: 1100px) {
   .app-shell {
     padding: var(--space-7);
   }
@@ -1152,13 +1152,13 @@ td[data-label="Merchant"] > small {
   tbody tr {
     display: grid;
     grid-template-columns:
-      minmax(0, 0.72fr)
-      minmax(0, 1.38fr)
-      minmax(0, 0.82fr)
-      minmax(0, 0.78fr)
-      minmax(0, 0.82fr)
-      minmax(0, 1fr)
-      minmax(0, 0.82fr);
+      minmax(5.6rem, 0.7fr)
+      minmax(9.5rem, 1.35fr)
+      minmax(6.8rem, 0.82fr)
+      minmax(6.4rem, 0.76fr)
+      minmax(6.8rem, 0.78fr)
+      minmax(9.8rem, 1.18fr)
+      minmax(8.8rem, 1fr);
     gap: 0;
     align-items: center;
   }
@@ -1210,8 +1210,15 @@ td[data-label="Merchant"] > small {
   }
 
   .amount-cell {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 0.15rem;
     justify-content: flex-end;
     text-align: right;
+  }
+
+  .amount-cell br {
+    display: none;
   }
 
   .row-actions {
@@ -1226,6 +1233,7 @@ td[data-label="Merchant"] > small {
 
   td[data-label="Actions"] {
     justify-content: flex-end;
+    padding-left: var(--space-2);
   }
 
   .bar-row {
@@ -1243,7 +1251,7 @@ td[data-label="Merchant"] > small {
   }
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1440px) {
   .layout {
     grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr);
     gap: var(--space-5);
@@ -1255,7 +1263,7 @@ td[data-label="Merchant"] > small {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1099px) {
   .app-shell {
     padding: var(--space-3);
     padding-bottom: calc(5.7rem + env(safe-area-inset-bottom));
