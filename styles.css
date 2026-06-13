@@ -469,6 +469,34 @@ textarea,
   transition: opacity 180ms ease;
 }
 
+body.expense-modal-open {
+  overflow: hidden;
+}
+
+body.expense-modal-open .modal-backdrop {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.expense-modal-open .modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.expense-modal-open .entry-panel {
+  position: fixed;
+  inset: auto var(--space-3) max(var(--space-3), env(safe-area-inset-bottom)) var(--space-3);
+  z-index: 40;
+  display: block;
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-xl);
+  animation: sheet-in 220ms ease both;
+}
+
 
 .expense-form,
 .settings {
@@ -1319,27 +1347,6 @@ td[data-label="Merchant"] > small {
     overflow-y: auto;
     overscroll-behavior: contain;
     border-radius: var(--radius-xl);
-  }
-
-  body.expense-modal-open {
-    overflow: hidden;
-  }
-
-  body.expense-modal-open .modal-backdrop {
-    display: block;
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  body.expense-modal-open .modal-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  body.expense-modal-open .entry-panel {
-    display: block;
-    animation: sheet-in 220ms ease both;
   }
 
   .metric:hover,

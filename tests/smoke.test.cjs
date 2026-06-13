@@ -134,9 +134,16 @@ test("keeps mobile expense modal support", () => {
   assertIncludes(appSource, "function openExpenseModal()");
   assertIncludes(appSource, "function closeExpenseModal()");
   assertIncludes(appSource, 'document.body.classList.add("expense-modal-open")');
+  assertIncludes(appSource, 'els.openExpenseModal.addEventListener("click", openExpenseModal)');
   assertIncludes(cssSource, ".mobile-fab");
   assertIncludes(cssSource, "body.expense-modal-open .entry-panel");
   assert.ok(cssSource.indexOf("body.expense-modal-open .entry-panel") < cssSource.indexOf("@media (max-width: 1099px)"));
+});
+
+test("keeps theme media query listener from breaking older mobile browsers", () => {
+  assertIncludes(appSource, "const colorSchemeQuery = window.matchMedia");
+  assertIncludes(appSource, "if (colorSchemeQuery.addEventListener)");
+  assertIncludes(appSource, "colorSchemeQuery.addListener(handleColorSchemeChange)");
 });
 
 test("uses soft light mode with compact cloud-only header", () => {
@@ -146,6 +153,7 @@ test("uses soft light mode with compact cloud-only header", () => {
   assertIncludes(htmlSource, "<title>Trip Expenses</title>");
   assertIncludes(htmlSource, '<header class="topbar">');
   assertIncludes(htmlSource, 'id="cloudStatus" aria-live="polite"');
+  assert.ok(!htmlSource.includes('id="themeToggle"'));
   assert.ok(!htmlSource.includes("<h1>Trip Expenses</h1>"));
   assert.ok(!htmlSource.includes("UK trip tracker"));
   assert.ok(!htmlSource.includes("<h1>Hasan & Husain Expenses</h1>"));

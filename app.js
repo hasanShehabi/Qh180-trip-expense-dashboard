@@ -93,8 +93,6 @@ const els = {
   openExpenseModal: document.querySelector("#openExpenseModal"),
   closeExpenseModal: document.querySelector("#closeExpenseModal"),
   expenseModalBackdrop: document.querySelector("#expenseModalBackdrop"),
-  themeToggle: document.querySelector("#themeToggle"),
-  themeToggleLabel: document.querySelector("#themeToggleLabel"),
 };
 
 init();
@@ -115,15 +113,16 @@ function bindEvents() {
     resetForm();
     closeExpenseModal();
   });
-  if (els.themeToggle) {
-    els.themeToggle.addEventListener("click", cycleTheme);
-  }
   if (window.matchMedia) {
-    window
-      .matchMedia("(prefers-color-scheme: dark)")
-      .addEventListener("change", () => {
-        if (getSavedTheme() === "auto") updateThemeColorMeta("auto");
-      });
+    const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleColorSchemeChange = () => {
+      if (getSavedTheme() === "auto") updateThemeColorMeta("auto");
+    };
+    if (colorSchemeQuery.addEventListener) {
+      colorSchemeQuery.addEventListener("change", handleColorSchemeChange);
+    } else if (colorSchemeQuery.addListener) {
+      colorSchemeQuery.addListener(handleColorSchemeChange);
+    }
   }
   els.openExpenseModal.addEventListener("click", openExpenseModal);
   els.closeExpenseModal.addEventListener("click", () => {
@@ -453,15 +452,6 @@ function applyTheme(theme) {
   try {
     localStorage.setItem(THEME_KEY, next);
   } catch {}
-  if (els.themeToggleLabel) {
-    els.themeToggleLabel.textContent = THEME_LABELS[next];
-  }
-  if (els.themeToggle) {
-    els.themeToggle.setAttribute(
-      "aria-label",
-      `Color theme: ${THEME_LABELS[next]}. Tap to change.`
-    );
-  }
   updateThemeColorMeta(next);
 }
 
