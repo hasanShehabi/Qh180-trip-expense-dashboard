@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#eef3f8" />
     <title>Trip Expenses</title>
+    <script>
+      // Apply saved theme before paint to avoid a flash of the wrong mode.
+      (function () {
+        try {
+          var saved = localStorage.getItem("ukTripTheme.v1");
+          document.documentElement.setAttribute("data-theme", saved || "auto");
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,6 +25,16 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
+        <button
+          class="theme-toggle"
+          id="themeToggle"
+          type="button"
+          aria-label="Switch color theme"
+          title="Switch color theme"
+        >
+          <span class="theme-toggle-icon" aria-hidden="true">🌓</span>
+          <span class="theme-toggle-label" id="themeToggleLabel">System</span>
+        </button>
         <div class="trip-meta" aria-label="Sync status">
           <span id="cloudStatus" aria-live="polite">Cloud sync ready</span>
         </div>

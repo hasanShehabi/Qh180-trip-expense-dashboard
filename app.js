@@ -1,5 +1,8 @@
 const STORAGE_KEY = "ukTripExpenses.v1";
 const SETTINGS_KEY = "ukTripSettings.v1";
+const THEME_KEY = "ukTripTheme.v1";
+const THEME_ORDER = ["auto", "light", "dark"];
+const THEME_LABELS = { auto: "System", light: "Light", dark: "Dark" };
 const CLOUD_API_URL = "/.netlify/functions/trip-data";
 const HOME_CURRENCY = "BHD";
 const BASE_CURRENCY = "GBP";
@@ -90,11 +93,14 @@ const els = {
   openExpenseModal: document.querySelector("#openExpenseModal"),
   closeExpenseModal: document.querySelector("#closeExpenseModal"),
   expenseModalBackdrop: document.querySelector("#expenseModalBackdrop"),
+  themeToggle: document.querySelector("#themeToggle"),
+  themeToggleLabel: document.querySelector("#themeToggleLabel"),
 };
 
 init();
 
 function init() {
+  applyTheme(getSavedTheme());
   els.date.valueAsDate = new Date();
   els.budget.value = state.settings.budget;
   renderFilterOptions();
@@ -109,6 +115,16 @@ function bindEvents() {
     resetForm();
     closeExpenseModal();
   });
+  if (els.themeToggle) {
+    els.themeToggle.addEventListener("click", cycleTheme);
+  }
+  if (window.matchMedia) {
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", () => {
+        if (getSavedTheme() === "auto") updateThemeColorMeta("auto");
+      });
+  }
   els.openExpenseModal.addEventListener("click", openExpenseModal);
   els.closeExpenseModal.addEventListener("click", () => {
     resetForm();
@@ -420,6 +436,49 @@ function openExpenseModal() {
 
 function closeExpenseModal() {
   document.body.classList.remove("expense-modal-open");
+}
+
+function getSavedTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    return THEME_ORDER.includes(saved) ? saved : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+function applyTheme(theme) {
+  const next = THEME_ORDER.includes(theme) ? theme : "auto";
+  document.documentElement.setAttribute("data-theme", next);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {}
+  if (els.themeToggleLabel) {
+    els.themeToggleLabel.textContent = THEME_LABELS[next];
+  }
+  if (els.themeToggle) {
+    els.themeToggle.setAttribute(
+      "aria-label",
+      `Color theme: ${THEME_LABELS[next]}. Tap to change.`
+    );
+  }
+  updateThemeColorMeta(next);
+}
+
+function cycleTheme() {
+  const current = getSavedTheme();
+  const next = THEME_ORDER[(THEME_ORDER.indexOf(current) + 1) % THEME_ORDER.length];
+  applyTheme(next);
+}
+
+function updateThemeColorMeta(theme) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  const prefersDark =
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = theme === "dark" || (theme === "auto" && prefersDark);
+  meta.setAttribute("content", isDark ? "#111827" : "#eef3f8");
 }
 
 function getFilteredExpenses() {
