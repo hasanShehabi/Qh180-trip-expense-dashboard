@@ -37,15 +37,16 @@ test("supports Hasan and Husain as payers", () => {
   assertIncludes(appSource, 'paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan"');
 });
 
-test("keeps the BHD display toggle wired", () => {
+test("keeps BHD conversion visible without a currency toggle", () => {
   assertIncludes(appSource, 'const HOME_CURRENCY = "BHD"');
   assertIncludes(appSource, 'const BASE_CURRENCY = "GBP"');
-  assertIncludes(htmlSource, 'id="currencyToggle"');
-  assertIncludes(htmlSource, "View in BHD");
-  assertIncludes(appSource, "function toggleDisplayCurrency()");
-  assertIncludes(appSource, "els.currencyToggle.addEventListener(\"click\", toggleDisplayCurrency)");
-  assertIncludes(appSource, "getDisplayCurrency() === HOME_CURRENCY");
+  assertIncludes(appSource, 'const RATE_API_URL = "https://api.frankfurter.dev/v2/rate/GBP/BHD"');
+  assertIncludes(htmlSource, 'id="homeSpend"');
   assertIncludes(appSource, "formatAlternateMoney");
+  assertIncludes(appSource, "formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)");
+  assert.ok(!htmlSource.includes('id="currencyToggle"'));
+  assert.ok(!htmlSource.includes("View in BHD"));
+  assert.ok(!appSource.includes("function toggleDisplayCurrency()"));
 });
 
 test("retains equal split settlement logic", () => {
@@ -58,13 +59,13 @@ test("retains equal split settlement logic", () => {
   assertIncludes(htmlSource, 'id="settlementDetail"');
 });
 
-test("exports CSV with payer and BHD columns", () => {
-  assertIncludes(appSource, "function exportCsv()");
-  assertIncludes(appSource, '"BHD Amount"');
-  assertIncludes(appSource, '"GBP to BHD Rate"');
-  assertIncludes(appSource, '"Paid By"');
-  assertIncludes(appSource, 'expense.paidBy || "Hasan"');
-  assertIncludes(appSource, "(Number(expense.amount) * exchangeRate).toFixed(3)");
+test("removes retired header action buttons", () => {
+  assert.ok(!htmlSource.includes('id="seedDemo"'));
+  assert.ok(!htmlSource.includes('id="exportCsv"'));
+  assert.ok(!htmlSource.includes("Load sample"));
+  assert.ok(!htmlSource.includes("Export CSV"));
+  assert.ok(!appSource.includes("function loadSampleExpenses()"));
+  assert.ok(!appSource.includes("function exportCsv()"));
 });
 
 test("HTML defines every ID queried by app.js", () => {
@@ -79,8 +80,6 @@ test("HTML references expected dashboard IDs", () => {
   const expectedIds = [
     "expenseForm",
     "paidBy",
-    "currencyToggle",
-    "exportCsv",
     "totalSpend",
     "homeSpend",
     "hasanPaid",
@@ -117,8 +116,10 @@ test("keeps mobile expense modal support", () => {
   assertIncludes(cssSource, "body.expense-modal-open .entry-panel");
 });
 
-test("uses dark mode and generic title", () => {
-  assertIncludes(cssSource, "color-scheme: dark");
+test("uses soft light mode and generic title", () => {
+  assertIncludes(cssSource, "color-scheme: light");
+  assertIncludes(cssSource, "--bg: #edf1ec");
+  assertIncludes(cssSource, "--surface: #f8f5ef");
   assertIncludes(htmlSource, "<title>Trip Expenses</title>");
   assertIncludes(htmlSource, "<h1>Trip Expenses</h1>");
   assert.ok(!htmlSource.includes("<h1>Hasan & Husain Expenses</h1>"));

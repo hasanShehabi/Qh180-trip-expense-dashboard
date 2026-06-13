@@ -34,16 +34,11 @@ const state = {
     exchangeRate: "",
     exchangeRateDate: "",
     exchangeRateFetchedAt: "",
-    displayCurrency: BASE_CURRENCY,
     cloudUpdatedAt: "",
   }),
   filters: { query: "", category: "All", payment: "All", payer: "All" },
   cloud: { ready: false, saving: false },
 };
-
-if (![BASE_CURRENCY, HOME_CURRENCY].includes(state.settings.displayCurrency)) {
-  state.settings.displayCurrency = BASE_CURRENCY;
-}
 
 state.expenses = state.expenses.map((expense) => ({
   ...expense,
@@ -65,7 +60,6 @@ const els = {
   refreshRate: document.querySelector("#refreshRate"),
   rateStatus: document.querySelector("#rateStatus"),
   cloudStatus: document.querySelector("#cloudStatus"),
-  currencyToggle: document.querySelector("#currencyToggle"),
   totalSpend: document.querySelector("#totalSpend"),
   homeSpend: document.querySelector("#homeSpend"),
   hasanPaid: document.querySelector("#hasanPaid"),
@@ -92,8 +86,6 @@ const els = {
   openExpenseModal: document.querySelector("#openExpenseModal"),
   closeExpenseModal: document.querySelector("#closeExpenseModal"),
   expenseModalBackdrop: document.querySelector("#expenseModalBackdrop"),
-  exportCsv: document.querySelector("#exportCsv"),
-  seedDemo: document.querySelector("#seedDemo"),
 };
 
 init();
@@ -131,7 +123,6 @@ function bindEvents() {
   els.notes.addEventListener("input", suggestCategory);
   els.budget.addEventListener("input", saveSettings);
   els.refreshRate.addEventListener("click", () => refreshExchangeRate({ silent: false }));
-  els.currencyToggle.addEventListener("click", toggleDisplayCurrency);
   els.search.addEventListener("input", () => {
     state.filters.query = els.search.value.trim().toLowerCase();
     render();
@@ -151,8 +142,6 @@ function bindEvents() {
     render();
   });
   els.expenseRows.addEventListener("click", handleRowAction);
-  els.exportCsv.addEventListener("click", exportCsv);
-  els.seedDemo.addEventListener("click", loadSampleExpenses);
 }
 
 function saveExpense(event) {
@@ -200,27 +189,11 @@ function saveSettings() {
     exchangeRate: state.settings.exchangeRate,
     exchangeRateDate: state.settings.exchangeRateDate,
     exchangeRateFetchedAt: state.settings.exchangeRateFetchedAt,
-    displayCurrency: state.settings.displayCurrency,
     cloudUpdatedAt: state.settings.cloudUpdatedAt,
   };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
   render();
   saveCloudData();
-}
-
-function toggleDisplayCurrency() {
-  const nextCurrency =
-    state.settings.displayCurrency === HOME_CURRENCY ? BASE_CURRENCY : HOME_CURRENCY;
-  state.settings.displayCurrency = nextCurrency;
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
-  saveCloudData();
-
-  if (nextCurrency === HOME_CURRENCY && !hasSavedRate()) {
-    refreshExchangeRate({ silent: false });
-    return;
-  }
-
-  render();
 }
 
 async function refreshExchangeRate({ silent } = { silent: false }) {
@@ -278,9 +251,6 @@ function renderMetrics(totals) {
   els.fairShareLabel.textContent = totals.totalGbp ? formatDisplayMoney(fairShare) : "Each share";
   els.hasanBalance.textContent = formatBalance(hasanBalance);
   els.husainBalance.textContent = formatBalance(husainBalance);
-  els.currencyToggle.textContent =
-    getDisplayCurrency() === HOME_CURRENCY ? `View in ${BASE_CURRENCY}` : `View in ${HOME_CURRENCY}`;
-  els.currencyToggle.classList.toggle("active", getDisplayCurrency() === HOME_CURRENCY);
   els.amountHeader.textContent = `${getDisplayCurrency()} amount`;
 
   if (budget > 0) {
@@ -343,7 +313,6 @@ function renderRows(expenses) {
   }
 
   const exchangeRate = Number(state.settings.exchangeRate);
-  const displayCurrency = getDisplayCurrency();
 
   els.expenseRows.innerHTML = expenses
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -360,18 +329,7 @@ function renderRows(expenses) {
           <td data-label="Payment"><span class="payment-pill">${escapeHtml(expense.payment)}</span></td>
           <td class="amount-cell" data-label="${getDisplayCurrency()} amount">
             <strong>${formatDisplayMoney(expense.amount)}</strong>
-            ${
-              displayCurrency === HOME_CURRENCY
-                ? `<br><small>${formatMoney(expense.amount, BASE_CURRENCY)}</small>`
-                : exchangeRate
-                  ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>`
-                  : ""
-            }
-            ${
-              displayCurrency === HOME_CURRENCY && !exchangeRate
-                ? `<br><small>${HOME_CURRENCY} rate unavailable</small>`
-                : ""
-            }
+            ${exchangeRate ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>` : ""}
           </td>
           <td data-label="Actions">
             <div class="row-actions">
@@ -521,9 +479,6 @@ async function loadCloudData() {
         ...(cloudData.settings || {}),
         cloudUpdatedAt: cloudData.updatedAt || "",
       };
-      if (![BASE_CURRENCY, HOME_CURRENCY].includes(state.settings.displayCurrency)) {
-        state.settings.displayCurrency = BASE_CURRENCY;
-      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.expenses));
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
       els.budget.value = state.settings.budget || "";
@@ -628,26 +583,15 @@ function formatMoney(amount, currency) {
 }
 
 function getDisplayCurrency() {
-  const rate = Number(state.settings.exchangeRate);
-  if (state.settings.displayCurrency === HOME_CURRENCY && rate) return HOME_CURRENCY;
   return BASE_CURRENCY;
 }
 
 function formatDisplayMoney(gbpAmount) {
-  const rate = Number(state.settings.exchangeRate);
-  if (state.settings.displayCurrency === HOME_CURRENCY && rate) {
-    return formatMoney(Number(gbpAmount) * rate, HOME_CURRENCY);
-  }
-
   return formatMoney(gbpAmount, BASE_CURRENCY);
 }
 
 function formatAlternateMoney(gbpAmount) {
   const rate = Number(state.settings.exchangeRate);
-  if (getDisplayCurrency() === HOME_CURRENCY) {
-    return `Original: ${formatMoney(gbpAmount, BASE_CURRENCY)}`;
-  }
-
   return rate
     ? `${HOME_CURRENCY}: ${formatMoney(Number(gbpAmount) * rate, HOME_CURRENCY)}`
     : `${HOME_CURRENCY} rate unavailable`;
@@ -657,13 +601,6 @@ function formatBalance(gbpAmount) {
   if (Math.abs(gbpAmount) < 0.01) return "Even";
   const label = gbpAmount > 0 ? "is owed" : "owes";
   return `${label} ${formatDisplayMoney(Math.abs(gbpAmount))}`;
-}
-
-function formatNumber(amount) {
-  return new Intl.NumberFormat("en-GB", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  }).format(Number(amount) || 0);
 }
 
 function formatDate(date) {
@@ -685,95 +622,4 @@ function escapeHtml(value) {
     };
     return map[char];
   });
-}
-
-function exportCsv() {
-  const exchangeRate = Number(state.settings.exchangeRate);
-  const headers = [
-    "Date",
-    "Merchant",
-    "GBP Amount",
-    "BHD Amount",
-    "GBP to BHD Rate",
-    "Paid By",
-    "Category",
-    "Payment",
-    "Notes",
-  ];
-  const rows = state.expenses.map((expense) => [
-    expense.date,
-    expense.merchant,
-    expense.amount,
-    exchangeRate ? (Number(expense.amount) * exchangeRate).toFixed(3) : "",
-    exchangeRate || "",
-    expense.paidBy || "Hasan",
-    expense.category,
-    expense.payment,
-    expense.notes || "",
-  ]);
-  const csv = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
-    .join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "uk-trip-expenses.csv";
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function loadSampleExpenses() {
-  state.expenses = [
-    {
-      id: crypto.randomUUID(),
-      date: todayMinus(4),
-      merchant: "Heathrow Express",
-      amount: 25,
-      paidBy: "Hasan",
-      category: "Transport",
-      payment: "Card",
-      notes: "Airport transfer",
-    },
-    {
-      id: crypto.randomUUID(),
-      date: todayMinus(3),
-      merchant: "Pret a Manger",
-      amount: 11.85,
-      paidBy: "Husain",
-      category: "Food",
-      payment: "Apple Pay",
-      notes: "Breakfast",
-    },
-    {
-      id: crypto.randomUUID(),
-      date: todayMinus(2),
-      merchant: "Tower of London",
-      amount: 34.8,
-      paidBy: "Hasan",
-      category: "Attractions",
-      payment: "Card",
-      notes: "Entry ticket",
-    },
-    {
-      id: crypto.randomUUID(),
-      date: todayMinus(1),
-      merchant: "Tesco Express",
-      amount: 18.4,
-      paidBy: "Husain",
-      category: "Groceries",
-      payment: "Card",
-      notes: "Snacks and water",
-    },
-  ];
-  persist();
-  render();
-  saveCloudData();
-}
-
-function todayMinus(days) {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return date.toISOString().slice(0, 10);
 }
