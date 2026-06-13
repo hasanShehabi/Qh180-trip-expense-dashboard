@@ -109,7 +109,7 @@ function bindEvents() {
     resetForm();
     closeExpenseModal();
   });
-  els.openExpenseModal.addEventListener("click", () => openExpenseModal());
+  els.openExpenseModal.addEventListener("click", openExpenseModal);
   els.closeExpenseModal.addEventListener("click", () => {
     resetForm();
     closeExpenseModal();

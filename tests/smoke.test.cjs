@@ -136,14 +136,18 @@ test("keeps mobile expense modal support", () => {
   assertIncludes(appSource, 'document.body.classList.add("expense-modal-open")');
   assertIncludes(cssSource, ".mobile-fab");
   assertIncludes(cssSource, "body.expense-modal-open .entry-panel");
+  assert.ok(cssSource.indexOf("body.expense-modal-open .entry-panel") < cssSource.indexOf("@media (max-width: 1099px)"));
 });
 
-test("uses soft light mode and generic title", () => {
+test("uses soft light mode with compact cloud-only header", () => {
   assertIncludes(cssSource, "color-scheme: light");
   assertIncludes(cssSource, "--bg: #edf1ec");
   assertIncludes(cssSource, "--surface: #f8f5ef");
   assertIncludes(htmlSource, "<title>Trip Expenses</title>");
-  assertIncludes(htmlSource, "<h1>Trip Expenses</h1>");
+  assertIncludes(htmlSource, '<header class="topbar">');
+  assertIncludes(htmlSource, 'id="cloudStatus" aria-live="polite"');
+  assert.ok(!htmlSource.includes("<h1>Trip Expenses</h1>"));
+  assert.ok(!htmlSource.includes("UK trip tracker"));
   assert.ok(!htmlSource.includes("<h1>Hasan & Husain Expenses</h1>"));
 });
 
