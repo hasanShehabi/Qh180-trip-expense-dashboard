@@ -1292,10 +1292,52 @@ td[data-label="Merchant"] > small {
     padding-bottom: calc(5.7rem + env(safe-area-inset-bottom));
   }
 
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .payments-panel {
+    order: -3;
+    padding: var(--space-3);
+  }
+
+  .payer-tabs {
+    order: -2;
+  }
+
+  .summary-grid {
+    order: 1;
+  }
+
+  .dashboard-grid {
+    order: 2;
+  }
+
   .section-heading,
   .list-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .list-heading {
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .list-heading p {
+    display: none;
+  }
+
+  .filters {
+    gap: var(--space-2);
+  }
+
+  .filters input,
+  .filters select {
+    min-height: 42px;
+    border-radius: var(--radius-sm);
+    padding: 0.62rem 0.78rem;
   }
 
   .trip-meta span {
@@ -1352,6 +1394,75 @@ td[data-label="Merchant"] > small {
     overflow-y: auto;
     overscroll-behavior: contain;
     border-radius: var(--radius-xl);
+  }
+
+  .payments-panel tbody {
+    gap: var(--space-2);
+  }
+
+  .payments-panel tbody tr {
+    gap: var(--space-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+
+  .payments-panel td,
+  .payments-panel td:first-child,
+  .payments-panel td:last-child {
+    gap: var(--space-2);
+  }
+
+  .payments-panel td::before {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+  }
+
+  .payments-panel td[data-label="Date"],
+  .payments-panel td[data-label="Payment"] {
+    display: none;
+  }
+
+  .payments-panel td[data-label="Merchant"] {
+    display: block;
+    text-align: left;
+  }
+
+  .payments-panel td[data-label="Merchant"]::before {
+    display: none;
+  }
+
+  .payments-panel td[data-label="Merchant"] > strong,
+  .payments-panel td[data-label="Merchant"] > small {
+    display: block;
+    text-align: left;
+  }
+
+  .payments-panel td[data-label="Merchant"] > strong {
+    font-size: 0.96rem;
+    line-height: 1.2;
+  }
+
+  .payments-panel .amount-cell {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .payments-panel .category-pill,
+  .payments-panel .person-pill,
+  .payments-panel .payment-pill {
+    min-height: 1.65rem;
+    font-size: 0.7rem;
+    padding: 0 0.55rem;
+  }
+
+  .payments-panel .row-actions {
+    gap: var(--space-2);
+  }
+
+  .payments-panel .link-button {
+    min-height: 2.05rem;
+    border-radius: var(--radius-md);
+    font-size: 0.78rem;
   }
 
   .metric:hover,

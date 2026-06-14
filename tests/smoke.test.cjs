@@ -118,6 +118,15 @@ test("keeps mobile transaction card support", () => {
   assertIncludes(cssSource, "@media (max-width: 460px)");
 });
 
+test("shows compact payments first on mobile", () => {
+  assertIncludes(htmlSource, 'class="panel payments-panel"');
+  assertIncludes(cssSource, ".payments-panel");
+  assertIncludes(cssSource, "order: -3");
+  assertIncludes(cssSource, 'td[data-label="Payment"]');
+  assertIncludes(cssSource, "font-size: 0.68rem");
+  assertIncludes(cssSource, ".payments-panel .link-button");
+});
+
 test("keeps desktop payment rows from clipping stacked amounts", () => {
   assertIncludes(cssSource, "@media (min-width: 1100px)");
   assertIncludes(cssSource, "flex-direction: column");
