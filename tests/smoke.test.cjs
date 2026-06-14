@@ -127,6 +127,16 @@ test("shows compact payments first on mobile", () => {
   assertIncludes(cssSource, ".payments-panel .link-button");
 });
 
+test("locks mobile viewport zoom and horizontal overflow", () => {
+  assertIncludes(htmlSource, "maximum-scale=1");
+  assertIncludes(htmlSource, "user-scalable=no");
+  assertIncludes(htmlSource, "viewport-fit=cover");
+  assertIncludes(cssSource, "overscroll-behavior-x: none");
+  assertIncludes(cssSource, "overflow-x: clip");
+  assertIncludes(cssSource, "touch-action: pan-y");
+  assertIncludes(cssSource, "max-width: 100vw");
+});
+
 test("keeps desktop payment rows from clipping stacked amounts", () => {
   assertIncludes(cssSource, "@media (min-width: 1100px)");
   assertIncludes(cssSource, "flex-direction: column");
