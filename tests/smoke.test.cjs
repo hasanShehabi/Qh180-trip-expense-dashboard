@@ -66,10 +66,23 @@ test("retains equal split settlement logic", () => {
   assertIncludes(appSource, "function getSettlement(totalGbp, hasanPaid, husainPaid)");
   assertIncludes(appSource, "const fairShare = totalGbp / people.length");
   assertIncludes(appSource, "const hasanBalance = hasanPaid - fairShare");
+  assertIncludes(appSource, "const settlement = getSettlement(totals.splitGbp, hasanSplitPaid, husainSplitPaid)");
   assertIncludes(appSource, 'summary: "Husain owes Hasan"');
   assertIncludes(appSource, 'summary: "Hasan owes Husain"');
   assertIncludes(htmlSource, 'id="settlementSummary"');
   assertIncludes(htmlSource, 'id="settlementDetail"');
+});
+
+test("supports payments that do not need to be split", () => {
+  assertIncludes(htmlSource, 'id="excludeFromSplit"');
+  assertIncludes(htmlSource, "Do not split this payment");
+  assertIncludes(appSource, "excludeFromSplit: els.excludeFromSplit.checked");
+  assertIncludes(appSource, "excludeFromSplit: Boolean(expense.excludeFromSplit)");
+  assertIncludes(appSource, "summary.splitGbp += gbp");
+  assertIncludes(appSource, "summary.byPayerSplit[paidBy]");
+  assertIncludes(appSource, "totals.splitGbp ? formatDisplayMoney(fairShare) : \"Each share\"");
+  assertIncludes(appSource, "Not split");
+  assertIncludes(cssSource, ".amount-cell .split-note");
 });
 
 test("removes retired header action buttons", () => {

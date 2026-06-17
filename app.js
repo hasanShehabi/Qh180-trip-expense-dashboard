@@ -49,6 +49,7 @@ state.expenses = state.expenses.map((expense) => ({
   ...expense,
   paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
   excludeFromBudget: Boolean(expense.excludeFromBudget),
+  excludeFromSplit: Boolean(expense.excludeFromSplit),
 }));
 
 const els = {
@@ -62,6 +63,7 @@ const els = {
   category: document.querySelector("#category"),
   payment: document.querySelector("#payment"),
   excludeFromBudget: document.querySelector("#excludeFromBudget"),
+  excludeFromSplit: document.querySelector("#excludeFromSplit"),
   notes: document.querySelector("#notes"),
   budget: document.querySelector("#budget"),
   refreshRate: document.querySelector("#refreshRate"),
@@ -176,6 +178,7 @@ function saveExpense(event) {
     category: els.category.value,
     payment: els.payment.value,
     excludeFromBudget: els.excludeFromBudget.checked,
+    excludeFromSplit: els.excludeFromSplit.checked,
     notes: els.notes.value.trim(),
   };
 
@@ -259,12 +262,14 @@ function renderMetrics(totals) {
   const excludedSpend = totals.excludedGbp;
   const hasanPaid = totals.byPayer.Hasan || 0;
   const husainPaid = totals.byPayer.Husain || 0;
+  const hasanSplitPaid = totals.byPayerSplit.Hasan || 0;
+  const husainSplitPaid = totals.byPayerSplit.Husain || 0;
   const hasanPercent = totals.totalGbp ? Math.round((hasanPaid / totals.totalGbp) * 100) : 0;
   const husainPercent = totals.totalGbp ? Math.round((husainPaid / totals.totalGbp) * 100) : 0;
-  const settlement = getSettlement(totals.totalGbp, hasanPaid, husainPaid);
-  const fairShare = totals.totalGbp / people.length;
-  const hasanBalance = hasanPaid - fairShare;
-  const husainBalance = husainPaid - fairShare;
+  const settlement = getSettlement(totals.splitGbp, hasanSplitPaid, husainSplitPaid);
+  const fairShare = totals.splitGbp / people.length;
+  const hasanBalance = hasanSplitPaid - fairShare;
+  const husainBalance = husainSplitPaid - fairShare;
 
   els.totalSpend.textContent = formatDisplayMoney(totals.totalGbp);
   els.homeSpend.textContent = formatAlternateMoney(totals.totalGbp);
@@ -274,7 +279,7 @@ function renderMetrics(totals) {
   els.husainShare.textContent = `${husainPercent}% of spending`;
   els.settlementSummary.textContent = settlement.summary;
   els.settlementDetail.textContent = settlement.detail;
-  els.fairShareLabel.textContent = totals.totalGbp ? formatDisplayMoney(fairShare) : "Each share";
+  els.fairShareLabel.textContent = totals.splitGbp ? formatDisplayMoney(fairShare) : "Each share";
   els.hasanBalance.textContent = formatBalance(hasanBalance);
   els.husainBalance.textContent = formatBalance(husainBalance);
   els.amountHeader.textContent = `${getDisplayCurrency()} amount`;
@@ -360,6 +365,7 @@ function renderRows(expenses) {
             <strong>${formatDisplayMoney(expense.amount)}</strong>
             ${exchangeRate ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>` : ""}
             ${expense.excludeFromBudget ? `<br><small class="budget-note">Outside budget</small>` : ""}
+            ${expense.excludeFromSplit ? `<br><small class="split-note">Not split</small>` : ""}
           </td>
           <td data-label="Actions">
             <div class="row-actions">
@@ -406,6 +412,7 @@ function handleRowAction(event) {
   els.category.value = expense.category;
   els.payment.value = expense.payment;
   els.excludeFromBudget.checked = Boolean(expense.excludeFromBudget);
+  els.excludeFromSplit.checked = Boolean(expense.excludeFromSplit);
   els.notes.value = expense.notes || "";
   els.editingBadge.classList.remove("hidden");
   openExpenseModal();
@@ -420,6 +427,7 @@ function resetForm() {
   els.category.value = "Food";
   els.payment.value = "Card";
   els.excludeFromBudget.checked = false;
+  els.excludeFromSplit.checked = false;
   els.editingBadge.classList.add("hidden");
 }
 
@@ -497,9 +505,21 @@ function getTotals(expenses) {
       }
       summary.byCategory[expense.category] = (summary.byCategory[expense.category] || 0) + gbp;
       summary.byPayer[paidBy] = (summary.byPayer[paidBy] || 0) + gbp;
+      if (!expense.excludeFromSplit) {
+        summary.splitGbp += gbp;
+        summary.byPayerSplit[paidBy] = (summary.byPayerSplit[paidBy] || 0) + gbp;
+      }
       return summary;
     },
-    { totalGbp: 0, budgetGbp: 0, excludedGbp: 0, byCategory: {}, byPayer: { Hasan: 0, Husain: 0 } },
+    {
+      totalGbp: 0,
+      budgetGbp: 0,
+      excludedGbp: 0,
+      splitGbp: 0,
+      byCategory: {},
+      byPayer: { Hasan: 0, Husain: 0 },
+      byPayerSplit: { Hasan: 0, Husain: 0 },
+    },
   );
 }
 
@@ -618,6 +638,7 @@ function normalizeExpenses(expenses) {
     ...expense,
     paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
     excludeFromBudget: Boolean(expense.excludeFromBudget),
+    excludeFromSplit: Boolean(expense.excludeFromSplit),
   }));
 }
 

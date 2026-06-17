@@ -988,6 +988,10 @@ td[data-label="Merchant"] > small {
   color: var(--warn);
 }
 
+.amount-cell .split-note {
+  color: var(--success);
+}
+
 .category-pill,
 .person-pill,
 .payment-pill {
