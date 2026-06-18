@@ -63,12 +63,11 @@ test("keeps BHD conversion visible without a currency toggle", () => {
 });
 
 test("retains equal split settlement logic", () => {
-  assertIncludes(appSource, "function getSettlement(totalGbp, hasanPaid, husainPaid)");
-  assertIncludes(appSource, "const fairShare = totalGbp / people.length");
-  assertIncludes(appSource, "const hasanBalance = hasanPaid - fairShare");
-  assertIncludes(appSource, "const settlement = getSettlement(totals.splitGbp, hasanSplitPaid, husainSplitPaid)");
-  assertIncludes(appSource, 'summary: "Husain owes Hasan"');
-  assertIncludes(appSource, 'summary: "Hasan owes Husain"');
+  assertIncludes(appSource, "function getSettlement(balances)");
+  assertIncludes(appSource, "const settlement = getSettlement(totals.balances)");
+  assertIncludes(appSource, "summary.balances[paidBy] = (summary.balances[paidBy] || 0) + gbp");
+  assertIncludes(appSource, "summary.balances[person] = (summary.balances[person] || 0) - share");
+  assertIncludes(appSource, "summary: `${debtor} owes ${creditor}`");
   assertIncludes(htmlSource, 'id="settlementSummary"');
   assertIncludes(htmlSource, 'id="settlementDetail"');
 });
@@ -80,9 +79,22 @@ test("supports payments that do not need to be split", () => {
   assertIncludes(appSource, "excludeFromSplit: Boolean(expense.excludeFromSplit)");
   assertIncludes(appSource, "summary.splitGbp += gbp");
   assertIncludes(appSource, "summary.byPayerSplit[paidBy]");
-  assertIncludes(appSource, "totals.splitGbp ? formatDisplayMoney(fairShare) : \"Each share\"");
+  assertIncludes(appSource, "totals.splitGbp ? `${formatDisplayMoney(totals.splitGbp)} split` : \"Each share\"");
   assertIncludes(appSource, "Not split");
   assertIncludes(cssSource, ".amount-cell .split-note");
+});
+
+test("supports splitting selected bills with Ebrahim", () => {
+  assert.deepEqual(extractArray(appSource, "splitPeople"), ["Hasan", "Husain", "Ebrahim"]);
+  assertIncludes(htmlSource, 'id="includeEbrahim"');
+  assertIncludes(htmlSource, "Include Ebrahim in the split");
+  assertIncludes(htmlSource, 'id="ebrahimBalance"');
+  assertIncludes(appSource, "includeEbrahim: els.includeEbrahim.checked");
+  assertIncludes(appSource, "includeEbrahim: Boolean(expense.includeEbrahim)");
+  assertIncludes(appSource, "function getSplitParticipants(expense)");
+  assertIncludes(appSource, "return expense.includeEbrahim ? splitPeople : people");
+  assertIncludes(appSource, "const share = participants.length ? gbp / participants.length : 0");
+  assertIncludes(appSource, "Split 3 ways");
 });
 
 test("removes retired header action buttons", () => {

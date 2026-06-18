@@ -21,6 +21,7 @@ const categories = [
 
 const payments = ["Card", "Cash", "Apple Pay", "Bank transfer"];
 const people = ["Hasan", "Husain"];
+const splitPeople = ["Hasan", "Husain", "Ebrahim"];
 
 const categoryHints = [
   { category: "Transport", words: ["tfl", "tube", "uber", "train", "rail", "bus", "taxi", "gatwick", "heathrow"] },
@@ -50,6 +51,7 @@ state.expenses = state.expenses.map((expense) => ({
   paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
   excludeFromBudget: Boolean(expense.excludeFromBudget),
   excludeFromSplit: Boolean(expense.excludeFromSplit),
+  includeEbrahim: Boolean(expense.includeEbrahim),
 }));
 
 const els = {
@@ -64,6 +66,7 @@ const els = {
   payment: document.querySelector("#payment"),
   excludeFromBudget: document.querySelector("#excludeFromBudget"),
   excludeFromSplit: document.querySelector("#excludeFromSplit"),
+  includeEbrahim: document.querySelector("#includeEbrahim"),
   notes: document.querySelector("#notes"),
   budget: document.querySelector("#budget"),
   refreshRate: document.querySelector("#refreshRate"),
@@ -80,6 +83,7 @@ const els = {
   fairShareLabel: document.querySelector("#fairShareLabel"),
   hasanBalance: document.querySelector("#hasanBalance"),
   husainBalance: document.querySelector("#husainBalance"),
+  ebrahimBalance: document.querySelector("#ebrahimBalance"),
   budgetProgress: document.querySelector("#budgetProgress"),
   budgetText: document.querySelector("#budgetText"),
   budgetLabel: document.querySelector("#budgetLabel"),
@@ -179,6 +183,7 @@ function saveExpense(event) {
     payment: els.payment.value,
     excludeFromBudget: els.excludeFromBudget.checked,
     excludeFromSplit: els.excludeFromSplit.checked,
+    includeEbrahim: els.includeEbrahim.checked,
     notes: els.notes.value.trim(),
   };
 
@@ -262,14 +267,9 @@ function renderMetrics(totals) {
   const excludedSpend = totals.excludedGbp;
   const hasanPaid = totals.byPayer.Hasan || 0;
   const husainPaid = totals.byPayer.Husain || 0;
-  const hasanSplitPaid = totals.byPayerSplit.Hasan || 0;
-  const husainSplitPaid = totals.byPayerSplit.Husain || 0;
   const hasanPercent = totals.totalGbp ? Math.round((hasanPaid / totals.totalGbp) * 100) : 0;
   const husainPercent = totals.totalGbp ? Math.round((husainPaid / totals.totalGbp) * 100) : 0;
-  const settlement = getSettlement(totals.splitGbp, hasanSplitPaid, husainSplitPaid);
-  const fairShare = totals.splitGbp / people.length;
-  const hasanBalance = hasanSplitPaid - fairShare;
-  const husainBalance = husainSplitPaid - fairShare;
+  const settlement = getSettlement(totals.balances);
 
   els.totalSpend.textContent = formatDisplayMoney(totals.totalGbp);
   els.homeSpend.textContent = formatAlternateMoney(totals.totalGbp);
@@ -279,9 +279,10 @@ function renderMetrics(totals) {
   els.husainShare.textContent = `${husainPercent}% of spending`;
   els.settlementSummary.textContent = settlement.summary;
   els.settlementDetail.textContent = settlement.detail;
-  els.fairShareLabel.textContent = totals.splitGbp ? formatDisplayMoney(fairShare) : "Each share";
-  els.hasanBalance.textContent = formatBalance(hasanBalance);
-  els.husainBalance.textContent = formatBalance(husainBalance);
+  els.fairShareLabel.textContent = totals.splitGbp ? `${formatDisplayMoney(totals.splitGbp)} split` : "Each share";
+  els.hasanBalance.textContent = formatBalance(totals.balances.Hasan || 0);
+  els.husainBalance.textContent = formatBalance(totals.balances.Husain || 0);
+  els.ebrahimBalance.textContent = formatBalance(totals.balances.Ebrahim || 0);
   els.amountHeader.textContent = `${getDisplayCurrency()} amount`;
 
   if (budget > 0) {
@@ -366,6 +367,7 @@ function renderRows(expenses) {
             ${exchangeRate ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>` : ""}
             ${expense.excludeFromBudget ? `<br><small class="budget-note">Outside budget</small>` : ""}
             ${expense.excludeFromSplit ? `<br><small class="split-note">Not split</small>` : ""}
+            ${expense.includeEbrahim && !expense.excludeFromSplit ? `<br><small class="split-note">Split 3 ways</small>` : ""}
           </td>
           <td data-label="Actions">
             <div class="row-actions">
@@ -413,6 +415,7 @@ function handleRowAction(event) {
   els.payment.value = expense.payment;
   els.excludeFromBudget.checked = Boolean(expense.excludeFromBudget);
   els.excludeFromSplit.checked = Boolean(expense.excludeFromSplit);
+  els.includeEbrahim.checked = Boolean(expense.includeEbrahim);
   els.notes.value = expense.notes || "";
   els.editingBadge.classList.remove("hidden");
   openExpenseModal();
@@ -428,6 +431,7 @@ function resetForm() {
   els.payment.value = "Card";
   els.excludeFromBudget.checked = false;
   els.excludeFromSplit.checked = false;
+  els.includeEbrahim.checked = false;
   els.editingBadge.classList.add("hidden");
 }
 
@@ -506,8 +510,14 @@ function getTotals(expenses) {
       summary.byCategory[expense.category] = (summary.byCategory[expense.category] || 0) + gbp;
       summary.byPayer[paidBy] = (summary.byPayer[paidBy] || 0) + gbp;
       if (!expense.excludeFromSplit) {
+        const participants = getSplitParticipants(expense);
+        const share = participants.length ? gbp / participants.length : 0;
         summary.splitGbp += gbp;
         summary.byPayerSplit[paidBy] = (summary.byPayerSplit[paidBy] || 0) + gbp;
+        summary.balances[paidBy] = (summary.balances[paidBy] || 0) + gbp;
+        participants.forEach((person) => {
+          summary.balances[person] = (summary.balances[person] || 0) - share;
+        });
       }
       return summary;
     },
@@ -519,32 +529,51 @@ function getTotals(expenses) {
       byCategory: {},
       byPayer: { Hasan: 0, Husain: 0 },
       byPayerSplit: { Hasan: 0, Husain: 0 },
+      balances: { Hasan: 0, Husain: 0, Ebrahim: 0 },
     },
   );
 }
 
-function getSettlement(totalGbp, hasanPaid, husainPaid) {
-  if (!totalGbp) {
+function getSplitParticipants(expense) {
+  return expense.includeEbrahim ? splitPeople : people;
+}
+
+function getSettlement(balances) {
+  const creditors = Object.entries(balances)
+    .filter(([, amount]) => amount > 0.01)
+    .sort((a, b) => b[1] - a[1]);
+  const debtors = Object.entries(balances)
+    .filter(([, amount]) => amount < -0.01)
+    .sort((a, b) => a[1] - b[1]);
+
+  if (!creditors.length || !debtors.length) {
     return { summary: "Even", detail: "No split needed" };
   }
 
-  const fairShare = totalGbp / people.length;
-  const hasanBalance = hasanPaid - fairShare;
-
-  if (Math.abs(hasanBalance) < 0.01) {
-    return { summary: "Even", detail: "Both have paid their share" };
+  if (creditors.length === 1 && debtors.length === 1) {
+    const [creditor, creditAmount] = creditors[0];
+    const [debtor] = debtors[0];
+    return {
+      summary: `${debtor} owes ${creditor}`,
+      detail: formatDisplayMoney(creditAmount),
+    };
   }
 
-  if (hasanBalance > 0) {
+  if (creditors.length === 1) {
+    const [creditor] = creditors[0];
     return {
-      summary: "Husain owes Hasan",
-      detail: formatDisplayMoney(hasanBalance),
+      summary: `${formatNameList(debtors.map(([name]) => name))} owe ${creditor}`,
+      detail: debtors
+        .map(([name, amount]) => `${name}: ${formatDisplayMoney(Math.abs(amount))}`)
+        .join("; "),
     };
   }
 
   return {
-    summary: "Hasan owes Husain",
-    detail: formatDisplayMoney(Math.abs(husainPaid - fairShare)),
+    summary: "Settle multiple balances",
+    detail: creditors
+      .map(([name, amount]) => `${name} is owed ${formatDisplayMoney(amount)}`)
+      .join("; "),
   };
 }
 
@@ -639,6 +668,7 @@ function normalizeExpenses(expenses) {
     paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
     excludeFromBudget: Boolean(expense.excludeFromBudget),
     excludeFromSplit: Boolean(expense.excludeFromSplit),
+    includeEbrahim: Boolean(expense.includeEbrahim),
   }));
 }
 
@@ -699,6 +729,11 @@ function formatBalance(gbpAmount) {
   if (Math.abs(gbpAmount) < 0.01) return "Even";
   const label = gbpAmount > 0 ? "is owed" : "owes";
   return `${label} ${formatDisplayMoney(Math.abs(gbpAmount))}`;
+}
+
+function formatNameList(names) {
+  if (names.length <= 2) return names.join(" and ");
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
 function formatDate(date) {
