@@ -366,8 +366,7 @@ function renderRows(expenses) {
             <strong>${formatDisplayMoney(expense.amount)}</strong>
             ${exchangeRate ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>` : ""}
             ${expense.excludeFromBudget ? `<br><small class="budget-note">Outside budget</small>` : ""}
-            ${expense.excludeFromSplit ? `<br><small class="split-note">Not split</small>` : ""}
-            ${expense.includeEbrahim && !expense.excludeFromSplit ? `<br><small class="split-note">Split 3 ways</small>` : ""}
+            <br><small class="split-note">${escapeHtml(getExpenseSplitNote(expense))}</small>
           </td>
           <td data-label="Actions">
             <div class="row-actions">
@@ -536,6 +535,20 @@ function getTotals(expenses) {
 
 function getSplitParticipants(expense) {
   return expense.includeEbrahim ? splitPeople : people;
+}
+
+function getExpenseSplitNote(expense) {
+  if (expense.excludeFromSplit) return "Not split";
+
+  const gbp = Number(expense.amount) || 0;
+  const paidBy = people.includes(expense.paidBy) ? expense.paidBy : "Hasan";
+  const participants = getSplitParticipants(expense);
+  const debtors = participants.filter((person) => person !== paidBy);
+  const share = participants.length ? gbp / participants.length : 0;
+  const verb = debtors.length === 1 ? "owes" : "owe";
+  const suffix = debtors.length > 1 ? " each" : "";
+
+  return `${formatNameList(debtors)} ${verb} ${paidBy} ${formatDisplayMoney(share)}${suffix}`;
 }
 
 function getSettlement(balances) {

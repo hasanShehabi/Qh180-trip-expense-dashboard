@@ -70,6 +70,7 @@ test("retains equal split settlement logic", () => {
   assertIncludes(appSource, "summary: `${debtor} owes ${creditor}`");
   assertIncludes(htmlSource, 'id="settlementSummary"');
   assertIncludes(htmlSource, 'id="settlementDetail"');
+  assertIncludes(htmlSource, "Net settle up");
 });
 
 test("supports payments that do not need to be split", () => {
@@ -80,6 +81,7 @@ test("supports payments that do not need to be split", () => {
   assertIncludes(appSource, "summary.splitGbp += gbp");
   assertIncludes(appSource, "summary.byPayerSplit[paidBy]");
   assertIncludes(appSource, "totals.splitGbp ? `${formatDisplayMoney(totals.splitGbp)} split` : \"Each share\"");
+  assertIncludes(appSource, "function getExpenseSplitNote(expense)");
   assertIncludes(appSource, "Not split");
   assertIncludes(cssSource, ".amount-cell .split-note");
 });
@@ -94,7 +96,8 @@ test("supports splitting selected bills with Ebrahim", () => {
   assertIncludes(appSource, "function getSplitParticipants(expense)");
   assertIncludes(appSource, "return expense.includeEbrahim ? splitPeople : people");
   assertIncludes(appSource, "const share = participants.length ? gbp / participants.length : 0");
-  assertIncludes(appSource, "Split 3 ways");
+  assertIncludes(appSource, "const debtors = participants.filter((person) => person !== paidBy)");
+  assertIncludes(appSource, 'const suffix = debtors.length > 1 ? " each" : ""');
 });
 
 test("removes retired header action buttons", () => {
