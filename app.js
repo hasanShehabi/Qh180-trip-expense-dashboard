@@ -47,14 +47,7 @@ const state = {
   cloud: { ready: false, saving: false },
 };
 
-state.expenses = state.expenses.map((expense) => ({
-  ...expense,
-  paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
-  excludeFromBudget: Boolean(expense.excludeFromBudget),
-  excludeFromSplit: Boolean(expense.excludeFromSplit),
-  includeEbrahim: Boolean(expense.includeEbrahim),
-  includeMariam: Boolean(expense.includeMariam),
-}));
+state.expenses = normalizeExpenses(state.expenses);
 
 const els = {
   form: document.querySelector("#expenseForm"),
@@ -63,6 +56,7 @@ const els = {
   date: document.querySelector("#date"),
   merchant: document.querySelector("#merchant"),
   amount: document.querySelector("#amount"),
+  amountCurrency: document.querySelector("#amountCurrency"),
   paidBy: document.querySelector("#paidBy"),
   category: document.querySelector("#category"),
   payment: document.querySelector("#payment"),
@@ -101,6 +95,8 @@ const els = {
   paymentFilter: document.querySelector("#paymentFilter"),
   payerTabs: document.querySelector(".payer-tabs"),
   search: document.querySelector("#search"),
+  exportExcel: document.querySelector("#exportExcel"),
+  downloadTemplate: document.querySelector("#downloadTemplate"),
   cancelEdit: document.querySelector("#cancelEdit"),
   openExpenseModal: document.querySelector("#openExpenseModal"),
   closeExpenseModal: document.querySelector("#closeExpenseModal"),
@@ -155,6 +151,8 @@ function bindEvents() {
   els.category.addEventListener("change", syncBudgetExclusion);
   els.budget.addEventListener("input", saveSettings);
   els.refreshRate.addEventListener("click", () => refreshExchangeRate({ silent: false }));
+  els.exportExcel.addEventListener("click", exportExcel);
+  els.downloadTemplate.addEventListener("click", downloadExcelTemplate);
   els.search.addEventListener("input", () => {
     state.filters.query = els.search.value.trim().toLowerCase();
     render();
@@ -178,12 +176,22 @@ function bindEvents() {
 
 function saveExpense(event) {
   event.preventDefault();
+  const originalAmount = Number(els.amount.value);
+  const originalCurrency = els.amountCurrency.value;
+  const gbpAmount = convertToBaseCurrency(originalAmount, originalCurrency);
+
+  if (!gbpAmount) {
+    setRateStatus(`Refresh the ${BASE_CURRENCY} to ${HOME_CURRENCY} rate before saving a ${HOME_CURRENCY} amount.`);
+    return;
+  }
 
   const expense = {
     id: els.editingId.value || crypto.randomUUID(),
     date: els.date.value,
     merchant: els.merchant.value.trim(),
-    amount: Number(els.amount.value),
+    amount: gbpAmount,
+    originalAmount,
+    originalCurrency,
     paidBy: els.paidBy.value,
     category: els.category.value,
     payment: els.payment.value,
@@ -194,7 +202,7 @@ function saveExpense(event) {
     notes: els.notes.value.trim(),
   };
 
-  if (!expense.merchant || !expense.date || !expense.amount) return;
+  if (!expense.merchant || !expense.date || !expense.amount || !expense.originalAmount) return;
 
   const existingIndex = state.expenses.findIndex((item) => item.id === expense.id);
   if (existingIndex >= 0) {
@@ -376,7 +384,7 @@ function renderRows(expenses) {
           <td data-label="Payment"><span class="payment-pill">${escapeHtml(expense.payment)}</span></td>
           <td class="amount-cell" data-label="${getDisplayCurrency()} amount">
             <strong>${formatDisplayMoney(expense.amount)}</strong>
-            ${exchangeRate ? `<br><small>${formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)}</small>` : ""}
+            <br><small>${escapeHtml(formatExpenseAmountDetail(expense, exchangeRate))}</small>
             ${expense.excludeFromBudget ? `<br><small class="budget-note">Outside budget</small>` : ""}
             <br><small class="split-note">${escapeHtml(getExpenseSplitNote(expense))}</small>
           </td>
@@ -420,7 +428,8 @@ function handleRowAction(event) {
   els.editingId.value = expense.id;
   els.date.value = expense.date;
   els.merchant.value = expense.merchant;
-  els.amount.value = expense.amount;
+  els.amount.value = getOriginalAmount(expense);
+  els.amountCurrency.value = getOriginalCurrency(expense);
   els.paidBy.value = people.includes(expense.paidBy) ? expense.paidBy : "Hasan";
   els.category.value = expense.category;
   els.payment.value = expense.payment;
@@ -438,6 +447,7 @@ function resetForm() {
   els.form.reset();
   els.editingId.value = "";
   els.date.valueAsDate = new Date();
+  els.amountCurrency.value = BASE_CURRENCY;
   els.paidBy.value = "Hasan";
   els.category.value = "Food";
   els.payment.value = "Card";
@@ -568,6 +578,37 @@ function getExpenseSplitNote(expense) {
   return `${formatNameList(debtors)} ${verb} ${paidBy} ${formatDisplayMoney(share)}${suffix}`;
 }
 
+function convertToBaseCurrency(amount, currency) {
+  const numericAmount = Number(amount);
+  if (!numericAmount) return 0;
+  if (currency === BASE_CURRENCY) return numericAmount;
+  const rate = Number(state.settings.exchangeRate);
+  return currency === HOME_CURRENCY && rate ? numericAmount / rate : 0;
+}
+
+function getOriginalCurrency(expense) {
+  return [BASE_CURRENCY, HOME_CURRENCY].includes(expense.originalCurrency)
+    ? expense.originalCurrency
+    : BASE_CURRENCY;
+}
+
+function getOriginalAmount(expense) {
+  return Number(expense.originalAmount) || Number(expense.amount) || 0;
+}
+
+function formatExpenseAmountDetail(expense, exchangeRate) {
+  const originalCurrency = getOriginalCurrency(expense);
+  const originalAmount = getOriginalAmount(expense);
+
+  if (originalCurrency === HOME_CURRENCY) {
+    return `Entered ${formatMoney(originalAmount, HOME_CURRENCY)}`;
+  }
+
+  return exchangeRate
+    ? formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)
+    : `${HOME_CURRENCY} rate unavailable`;
+}
+
 function getSettlement(balances) {
   const creditors = Object.entries(balances)
     .filter(([, amount]) => amount > 0.01)
@@ -609,6 +650,103 @@ function getSettlement(balances) {
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.expenses));
+}
+
+function exportExcel() {
+  const exchangeRate = Number(state.settings.exchangeRate);
+  const rows = [
+    [
+      "Date",
+      "Merchant",
+      "Amount",
+      "Currency",
+      "GBP Amount",
+      "BHD Amount",
+      "Paid By",
+      "Category",
+      "Payment",
+      "Exclude From Budget",
+      "Do Not Split",
+      "Include Ebrahim",
+      "Include Mariam",
+      "Notes",
+    ],
+    ...state.expenses
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map((expense) => {
+        const gbp = Number(expense.amount) || 0;
+        return [
+          expense.date,
+          expense.merchant,
+          getOriginalAmount(expense),
+          getOriginalCurrency(expense),
+          roundMoney(gbp),
+          exchangeRate ? roundMoney(gbp * exchangeRate) : "",
+          expense.paidBy || "Hasan",
+          expense.category,
+          expense.payment,
+          expense.excludeFromBudget ? "Yes" : "No",
+          expense.excludeFromSplit ? "Yes" : "No",
+          expense.includeEbrahim ? "Yes" : "No",
+          expense.includeMariam ? "Yes" : "No",
+          expense.notes || "",
+        ];
+      }),
+  ];
+
+  downloadCsv(`trip-expenses-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+}
+
+function downloadExcelTemplate() {
+  downloadCsv("trip-expense-template.csv", [
+    [
+      "Date",
+      "Merchant",
+      "Amount",
+      "Currency",
+      "Paid By",
+      "Category",
+      "Payment",
+      "Exclude From Budget",
+      "Do Not Split",
+      "Include Ebrahim",
+      "Include Mariam",
+      "Notes",
+    ],
+    [
+      "2026-06-22",
+      "Example lunch",
+      "10.50",
+      "GBP or BHD",
+      "Hasan, Husain, or Mariam",
+      "Food",
+      "Card",
+      "No",
+      "No",
+      "No",
+      "No",
+      "Optional notes",
+    ],
+  ]);
+}
+
+function downloadCsv(filename, rows) {
+  const csv = rows.map((row) => row.map(formatCsvCell).join(",")).join("\r\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function formatCsvCell(value) {
+  const text = String(value ?? "");
+  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 async function loadCloudData() {
@@ -693,14 +831,23 @@ function setCloudStatus(message) {
 }
 
 function normalizeExpenses(expenses) {
-  return (Array.isArray(expenses) ? expenses : []).map((expense) => ({
-    ...expense,
-    paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
-    excludeFromBudget: Boolean(expense.excludeFromBudget),
-    excludeFromSplit: Boolean(expense.excludeFromSplit),
-    includeEbrahim: Boolean(expense.includeEbrahim),
-    includeMariam: Boolean(expense.includeMariam),
-  }));
+  return (Array.isArray(expenses) ? expenses : []).map((expense) => {
+    const originalCurrency = [BASE_CURRENCY, HOME_CURRENCY].includes(expense.originalCurrency)
+      ? expense.originalCurrency
+      : BASE_CURRENCY;
+    const amount = Number(expense.amount) || 0;
+    return {
+      ...expense,
+      amount,
+      originalAmount: Number(expense.originalAmount) || amount,
+      originalCurrency,
+      paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan",
+      excludeFromBudget: Boolean(expense.excludeFromBudget),
+      excludeFromSplit: Boolean(expense.excludeFromSplit),
+      includeEbrahim: Boolean(expense.includeEbrahim),
+      includeMariam: Boolean(expense.includeMariam),
+    };
+  });
 }
 
 function renderRateStatus(hadError) {
@@ -739,6 +886,10 @@ function formatMoney(amount, currency) {
     currency,
     maximumFractionDigits: 2,
   }).format(Number(amount) || 0);
+}
+
+function roundMoney(amount) {
+  return Math.round((Number(amount) || 0) * 100) / 100;
 }
 
 function getDisplayCurrency() {

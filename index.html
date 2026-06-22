@@ -53,10 +53,20 @@
               <input id="merchant" name="merchant" type="text" placeholder="Pret, TfL, hotel..." required />
             </label>
 
-            <label>
-              <span>Amount in GBP</span>
-              <input id="amount" name="amount" min="0.01" step="0.01" type="number" placeholder="0.00" required />
-            </label>
+            <div class="two-col">
+              <label>
+                <span>Amount</span>
+                <input id="amount" name="amount" min="0.01" step="0.01" type="number" placeholder="0.00" required />
+              </label>
+
+              <label>
+                <span>Currency</span>
+                <select id="amountCurrency" name="amountCurrency" required>
+                  <option value="GBP">GBP</option>
+                  <option value="BHD">BHD</option>
+                </select>
+              </label>
+            </div>
 
             <label>
               <span>Paid by</span>
@@ -246,6 +256,10 @@
                 <select id="paymentFilter">
                   <option value="All">All payments</option>
                 </select>
+                <div class="export-actions">
+                  <button class="button secondary" id="exportExcel" type="button">Export Excel</button>
+                  <button class="button secondary" id="downloadTemplate" type="button">Excel template</button>
+                </div>
               </div>
             </div>
 

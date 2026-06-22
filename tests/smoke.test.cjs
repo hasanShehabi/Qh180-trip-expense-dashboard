@@ -60,10 +60,36 @@ test("keeps BHD conversion visible without a currency toggle", () => {
   assertIncludes(appSource, 'const RATE_API_URL = "https://api.frankfurter.dev/v2/rate/GBP/BHD"');
   assertIncludes(htmlSource, 'id="homeSpend"');
   assertIncludes(appSource, "formatAlternateMoney");
-  assertIncludes(appSource, "formatMoney(Number(expense.amount) * exchangeRate, HOME_CURRENCY)");
+  assertIncludes(appSource, "formatExpenseAmountDetail(expense, exchangeRate)");
   assert.ok(!htmlSource.includes('id="currencyToggle"'));
   assert.ok(!htmlSource.includes("View in BHD"));
   assert.ok(!appSource.includes("function toggleDisplayCurrency()"));
+});
+
+test("supports entering amounts in GBP or BHD", () => {
+  assertIncludes(htmlSource, 'id="amountCurrency"');
+  assertIncludes(htmlSource, '<option value="GBP">GBP</option>');
+  assertIncludes(htmlSource, '<option value="BHD">BHD</option>');
+  assertIncludes(appSource, "const originalAmount = Number(els.amount.value)");
+  assertIncludes(appSource, "const originalCurrency = els.amountCurrency.value");
+  assertIncludes(appSource, "const gbpAmount = convertToBaseCurrency(originalAmount, originalCurrency)");
+  assertIncludes(appSource, "originalAmount: Number(expense.originalAmount) || amount");
+  assertIncludes(appSource, "originalCurrency");
+  assertIncludes(appSource, "Entered ${formatMoney(originalAmount, HOME_CURRENCY)}");
+});
+
+test("exports Excel-friendly CSV and template files", () => {
+  assertIncludes(htmlSource, 'id="exportExcel"');
+  assertIncludes(htmlSource, "Export Excel");
+  assertIncludes(htmlSource, 'id="downloadTemplate"');
+  assertIncludes(htmlSource, "Excel template");
+  assertIncludes(appSource, 'els.exportExcel.addEventListener("click", exportExcel)');
+  assertIncludes(appSource, 'els.downloadTemplate.addEventListener("click", downloadExcelTemplate)');
+  assertIncludes(appSource, "function exportExcel()");
+  assertIncludes(appSource, "function downloadExcelTemplate()");
+  assertIncludes(appSource, "trip-expenses-${new Date().toISOString().slice(0, 10)}.csv");
+  assertIncludes(appSource, "trip-expense-template.csv");
+  assertIncludes(cssSource, ".export-actions");
 });
 
 test("retains equal split settlement logic", () => {
@@ -131,7 +157,10 @@ test("HTML defines every ID queried by app.js", () => {
 test("HTML references expected dashboard IDs", () => {
   const expectedIds = [
     "expenseForm",
+    "amountCurrency",
     "paidBy",
+    "exportExcel",
+    "downloadTemplate",
     "totalSpend",
     "homeSpend",
     "hasanPaid",
