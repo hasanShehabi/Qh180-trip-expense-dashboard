@@ -27,13 +27,17 @@ function assertIncludes(source, needle, label = needle) {
   assert.ok(source.includes(needle), `Expected source to include ${label}`);
 }
 
-test("supports Hasan and Husain as payers", () => {
-  assert.deepEqual(extractArray(appSource, "people"), ["Hasan", "Husain"]);
+test("supports Hasan, Husain, and Mariam as payers", () => {
+  assert.deepEqual(extractArray(appSource, "people"), ["Hasan", "Husain", "Mariam"]);
   assertIncludes(htmlSource, '<select id="paidBy" name="paidBy" required>');
   assertIncludes(htmlSource, '<option value="Hasan">Hasan</option>');
   assertIncludes(htmlSource, '<option value="Husain">Husain</option>');
+  assertIncludes(htmlSource, '<option value="Mariam">Mariam</option>');
   assertIncludes(htmlSource, 'data-payer="Hasan"');
   assertIncludes(htmlSource, 'data-payer="Husain"');
+  assertIncludes(htmlSource, 'data-payer="Mariam"');
+  assertIncludes(htmlSource, 'id="mariamPaid"');
+  assertIncludes(htmlSource, 'id="mariamShare"');
   assertIncludes(appSource, 'paidBy: people.includes(expense.paidBy) ? expense.paidBy : "Hasan"');
 });
 
@@ -86,15 +90,22 @@ test("supports payments that do not need to be split", () => {
   assertIncludes(cssSource, ".amount-cell .split-note");
 });
 
-test("supports splitting selected bills with Ebrahim", () => {
-  assert.deepEqual(extractArray(appSource, "splitPeople"), ["Hasan", "Husain", "Ebrahim"]);
+test("supports splitting selected bills with Ebrahim and Mariam", () => {
+  assert.deepEqual(extractArray(appSource, "baseSplitPeople"), ["Hasan", "Husain"]);
+  assert.deepEqual(extractArray(appSource, "splitPeople"), ["Hasan", "Husain", "Ebrahim", "Mariam"]);
   assertIncludes(htmlSource, 'id="includeEbrahim"');
   assertIncludes(htmlSource, "Include Ebrahim in the split");
+  assertIncludes(htmlSource, 'id="includeMariam"');
+  assertIncludes(htmlSource, "Include Mariam in the split");
   assertIncludes(htmlSource, 'id="ebrahimBalance"');
+  assertIncludes(htmlSource, 'id="mariamBalance"');
   assertIncludes(appSource, "includeEbrahim: els.includeEbrahim.checked");
+  assertIncludes(appSource, "includeMariam: els.includeMariam.checked");
   assertIncludes(appSource, "includeEbrahim: Boolean(expense.includeEbrahim)");
+  assertIncludes(appSource, "includeMariam: Boolean(expense.includeMariam)");
   assertIncludes(appSource, "function getSplitParticipants(expense)");
-  assertIncludes(appSource, "return expense.includeEbrahim ? splitPeople : people");
+  assertIncludes(appSource, 'if (expense.includeEbrahim) participants.push("Ebrahim")');
+  assertIncludes(appSource, 'if (expense.includeMariam) participants.push("Mariam")');
   assertIncludes(appSource, "const share = participants.length ? gbp / participants.length : 0");
   assertIncludes(appSource, "const debtors = participants.filter((person) => person !== paidBy)");
   assertIncludes(appSource, 'const suffix = debtors.length > 1 ? " each" : ""');
@@ -125,6 +136,7 @@ test("HTML references expected dashboard IDs", () => {
     "homeSpend",
     "hasanPaid",
     "husainPaid",
+    "mariamPaid",
     "settlementSummary",
     "settlementDetail",
     "amountHeader",

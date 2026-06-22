@@ -20,8 +20,9 @@ const categories = [
 ];
 
 const payments = ["Card", "Cash", "Apple Pay", "Bank transfer"];
-const people = ["Hasan", "Husain"];
-const splitPeople = ["Hasan", "Husain", "Ebrahim"];
+const people = ["Hasan", "Husain", "Mariam"];
+const baseSplitPeople = ["Hasan", "Husain"];
+const splitPeople = ["Hasan", "Husain", "Ebrahim", "Mariam"];
 
 const categoryHints = [
   { category: "Transport", words: ["tfl", "tube", "uber", "train", "rail", "bus", "taxi", "gatwick", "heathrow"] },
@@ -52,6 +53,7 @@ state.expenses = state.expenses.map((expense) => ({
   excludeFromBudget: Boolean(expense.excludeFromBudget),
   excludeFromSplit: Boolean(expense.excludeFromSplit),
   includeEbrahim: Boolean(expense.includeEbrahim),
+  includeMariam: Boolean(expense.includeMariam),
 }));
 
 const els = {
@@ -67,6 +69,7 @@ const els = {
   excludeFromBudget: document.querySelector("#excludeFromBudget"),
   excludeFromSplit: document.querySelector("#excludeFromSplit"),
   includeEbrahim: document.querySelector("#includeEbrahim"),
+  includeMariam: document.querySelector("#includeMariam"),
   notes: document.querySelector("#notes"),
   budget: document.querySelector("#budget"),
   refreshRate: document.querySelector("#refreshRate"),
@@ -78,12 +81,15 @@ const els = {
   hasanShare: document.querySelector("#hasanShare"),
   husainPaid: document.querySelector("#husainPaid"),
   husainShare: document.querySelector("#husainShare"),
+  mariamPaid: document.querySelector("#mariamPaid"),
+  mariamShare: document.querySelector("#mariamShare"),
   settlementSummary: document.querySelector("#settlementSummary"),
   settlementDetail: document.querySelector("#settlementDetail"),
   fairShareLabel: document.querySelector("#fairShareLabel"),
   hasanBalance: document.querySelector("#hasanBalance"),
   husainBalance: document.querySelector("#husainBalance"),
   ebrahimBalance: document.querySelector("#ebrahimBalance"),
+  mariamBalance: document.querySelector("#mariamBalance"),
   budgetProgress: document.querySelector("#budgetProgress"),
   budgetText: document.querySelector("#budgetText"),
   budgetLabel: document.querySelector("#budgetLabel"),
@@ -184,6 +190,7 @@ function saveExpense(event) {
     excludeFromBudget: els.excludeFromBudget.checked,
     excludeFromSplit: els.excludeFromSplit.checked,
     includeEbrahim: els.includeEbrahim.checked,
+    includeMariam: els.includeMariam.checked,
     notes: els.notes.value.trim(),
   };
 
@@ -267,8 +274,10 @@ function renderMetrics(totals) {
   const excludedSpend = totals.excludedGbp;
   const hasanPaid = totals.byPayer.Hasan || 0;
   const husainPaid = totals.byPayer.Husain || 0;
+  const mariamPaid = totals.byPayer.Mariam || 0;
   const hasanPercent = totals.totalGbp ? Math.round((hasanPaid / totals.totalGbp) * 100) : 0;
   const husainPercent = totals.totalGbp ? Math.round((husainPaid / totals.totalGbp) * 100) : 0;
+  const mariamPercent = totals.totalGbp ? Math.round((mariamPaid / totals.totalGbp) * 100) : 0;
   const settlement = getSettlement(totals.balances);
 
   els.totalSpend.textContent = formatDisplayMoney(totals.totalGbp);
@@ -277,12 +286,15 @@ function renderMetrics(totals) {
   els.hasanShare.textContent = `${hasanPercent}% of spending`;
   els.husainPaid.textContent = formatDisplayMoney(husainPaid);
   els.husainShare.textContent = `${husainPercent}% of spending`;
+  els.mariamPaid.textContent = formatDisplayMoney(mariamPaid);
+  els.mariamShare.textContent = `${mariamPercent}% of spending`;
   els.settlementSummary.textContent = settlement.summary;
   els.settlementDetail.textContent = settlement.detail;
   els.fairShareLabel.textContent = totals.splitGbp ? `${formatDisplayMoney(totals.splitGbp)} split` : "Each share";
   els.hasanBalance.textContent = formatBalance(totals.balances.Hasan || 0);
   els.husainBalance.textContent = formatBalance(totals.balances.Husain || 0);
   els.ebrahimBalance.textContent = formatBalance(totals.balances.Ebrahim || 0);
+  els.mariamBalance.textContent = formatBalance(totals.balances.Mariam || 0);
   els.amountHeader.textContent = `${getDisplayCurrency()} amount`;
 
   if (budget > 0) {
@@ -415,6 +427,7 @@ function handleRowAction(event) {
   els.excludeFromBudget.checked = Boolean(expense.excludeFromBudget);
   els.excludeFromSplit.checked = Boolean(expense.excludeFromSplit);
   els.includeEbrahim.checked = Boolean(expense.includeEbrahim);
+  els.includeMariam.checked = Boolean(expense.includeMariam);
   els.notes.value = expense.notes || "";
   els.editingBadge.classList.remove("hidden");
   openExpenseModal();
@@ -431,6 +444,7 @@ function resetForm() {
   els.excludeFromBudget.checked = false;
   els.excludeFromSplit.checked = false;
   els.includeEbrahim.checked = false;
+  els.includeMariam.checked = false;
   els.editingBadge.classList.add("hidden");
 }
 
@@ -526,15 +540,18 @@ function getTotals(expenses) {
       excludedGbp: 0,
       splitGbp: 0,
       byCategory: {},
-      byPayer: { Hasan: 0, Husain: 0 },
-      byPayerSplit: { Hasan: 0, Husain: 0 },
-      balances: { Hasan: 0, Husain: 0, Ebrahim: 0 },
+      byPayer: { Hasan: 0, Husain: 0, Mariam: 0 },
+      byPayerSplit: { Hasan: 0, Husain: 0, Mariam: 0 },
+      balances: { Hasan: 0, Husain: 0, Ebrahim: 0, Mariam: 0 },
     },
   );
 }
 
 function getSplitParticipants(expense) {
-  return expense.includeEbrahim ? splitPeople : people;
+  const participants = [...baseSplitPeople];
+  if (expense.includeEbrahim) participants.push("Ebrahim");
+  if (expense.includeMariam) participants.push("Mariam");
+  return participants;
 }
 
 function getExpenseSplitNote(expense) {
@@ -682,6 +699,7 @@ function normalizeExpenses(expenses) {
     excludeFromBudget: Boolean(expense.excludeFromBudget),
     excludeFromSplit: Boolean(expense.excludeFromSplit),
     includeEbrahim: Boolean(expense.includeEbrahim),
+    includeMariam: Boolean(expense.includeMariam),
   }));
 }
 

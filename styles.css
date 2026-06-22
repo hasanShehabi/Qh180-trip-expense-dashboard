@@ -397,6 +397,10 @@ textarea,
   background: linear-gradient(90deg, var(--husain), color-mix(in srgb, var(--husain) 10%, transparent));
 }
 
+.metric-mariam::before {
+  background: linear-gradient(90deg, var(--warn), color-mix(in srgb, var(--warn) 10%, transparent));
+}
+
 .metric:hover,
 .panel:hover,
 .entry-panel:hover {
@@ -1057,6 +1061,11 @@ td[data-label="Merchant"] > small {
   color: var(--husain);
 }
 
+.person-pill[data-person="Mariam"] {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
 .payment-pill {
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface-1) 76%, transparent);
@@ -1142,7 +1151,7 @@ td[data-label="Merchant"] > small {
   }
 
   .payer-tabs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
