@@ -79,16 +79,26 @@ test("supports entering amounts in GBP or BHD", () => {
 });
 
 test("exports Excel-friendly CSV and template files", () => {
+  assertIncludes(htmlSource, 'id="importExcel"');
+  assertIncludes(htmlSource, "Import Excel");
+  assertIncludes(htmlSource, 'id="importExcelFile"');
+  assertIncludes(htmlSource, 'accept=".csv,text/csv"');
   assertIncludes(htmlSource, 'id="exportExcel"');
   assertIncludes(htmlSource, "Export Excel");
   assertIncludes(htmlSource, 'id="downloadTemplate"');
   assertIncludes(htmlSource, "Excel template");
+  assertIncludes(appSource, 'els.importExcel.addEventListener("click", () => els.importExcelFile.click())');
+  assertIncludes(appSource, 'els.importExcelFile.addEventListener("change", importExcel)');
   assertIncludes(appSource, 'els.exportExcel.addEventListener("click", exportExcel)');
   assertIncludes(appSource, 'els.downloadTemplate.addEventListener("click", downloadExcelTemplate)');
+  assertIncludes(appSource, "async function importExcel(event)");
+  assertIncludes(appSource, "function parseExpenseCsv(text)");
+  assertIncludes(appSource, "function buildExpenseFromImportRow(headers, row, rowNumber)");
   assertIncludes(appSource, "function exportExcel()");
   assertIncludes(appSource, "function downloadExcelTemplate()");
   assertIncludes(appSource, "trip-expenses-${new Date().toISOString().slice(0, 10)}.csv");
   assertIncludes(appSource, "trip-expense-template.csv");
+  assertIncludes(appSource, "Imported ${imported.length}");
   assertIncludes(cssSource, ".export-actions");
 });
 
@@ -159,6 +169,8 @@ test("HTML references expected dashboard IDs", () => {
     "expenseForm",
     "amountCurrency",
     "paidBy",
+    "importExcel",
+    "importExcelFile",
     "exportExcel",
     "downloadTemplate",
     "totalSpend",

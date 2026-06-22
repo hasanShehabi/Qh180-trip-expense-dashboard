@@ -95,6 +95,8 @@ const els = {
   paymentFilter: document.querySelector("#paymentFilter"),
   payerTabs: document.querySelector(".payer-tabs"),
   search: document.querySelector("#search"),
+  importExcel: document.querySelector("#importExcel"),
+  importExcelFile: document.querySelector("#importExcelFile"),
   exportExcel: document.querySelector("#exportExcel"),
   downloadTemplate: document.querySelector("#downloadTemplate"),
   cancelEdit: document.querySelector("#cancelEdit"),
@@ -151,6 +153,8 @@ function bindEvents() {
   els.category.addEventListener("change", syncBudgetExclusion);
   els.budget.addEventListener("input", saveSettings);
   els.refreshRate.addEventListener("click", () => refreshExchangeRate({ silent: false }));
+  els.importExcel.addEventListener("click", () => els.importExcelFile.click());
+  els.importExcelFile.addEventListener("change", importExcel);
   els.exportExcel.addEventListener("click", exportExcel);
   els.downloadTemplate.addEventListener("click", downloadExcelTemplate);
   els.search.addEventListener("input", () => {
@@ -652,6 +656,30 @@ function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.expenses));
 }
 
+async function importExcel(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const imported = parseExpenseCsv(text);
+    if (!imported.length) {
+      setCloudStatus("No import rows found");
+      return;
+    }
+
+    state.expenses = normalizeExpenses([...state.expenses, ...imported]);
+    persist();
+    render();
+    saveCloudData();
+    setCloudStatus(`Imported ${imported.length} ${imported.length === 1 ? "expense" : "expenses"}`);
+  } catch (error) {
+    setCloudStatus(error.message || "Import failed");
+  } finally {
+    els.importExcelFile.value = "";
+  }
+}
+
 function exportExcel() {
   const exchangeRate = Number(state.settings.exchangeRate);
   const rows = [
@@ -718,8 +746,8 @@ function downloadExcelTemplate() {
       "2026-06-22",
       "Example lunch",
       "10.50",
-      "GBP or BHD",
-      "Hasan, Husain, or Mariam",
+      "GBP",
+      "Hasan",
       "Food",
       "Card",
       "No",
@@ -747,6 +775,107 @@ function downloadCsv(filename, rows) {
 function formatCsvCell(value) {
   const text = String(value ?? "");
   return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function parseExpenseCsv(text) {
+  const rows = parseCsvRows(text);
+  if (rows.length < 2) return [];
+
+  const headers = rows[0].map(normalizeHeader);
+  const imported = rows
+    .slice(1)
+    .filter((row) => row.some((cell) => String(cell).trim()))
+    .map((row, index) => buildExpenseFromImportRow(headers, row, index + 2))
+    .filter(Boolean);
+
+  return imported;
+}
+
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let inQuotes = false;
+  const source = text.replace(/^\uFEFF/, "");
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      value += '"';
+      index += 1;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      row.push(value);
+      value = "";
+    } else if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(value);
+      rows.push(row);
+      row = [];
+      value = "";
+    } else {
+      value += char;
+    }
+  }
+
+  row.push(value);
+  if (row.some((cell) => cell !== "") || rows.length) rows.push(row);
+  return rows;
+}
+
+function buildExpenseFromImportRow(headers, row, rowNumber) {
+  const get = (header) => row[headers.indexOf(normalizeHeader(header))] || "";
+  const date = get("Date").trim();
+  const merchant = get("Merchant").trim();
+  const originalAmount = Number(get("Amount"));
+  const originalCurrency = normalizeCurrency(get("Currency"));
+  const amount = convertToBaseCurrency(originalAmount, originalCurrency);
+
+  if (!date || !merchant || !originalAmount) return null;
+  if (!originalCurrency) throw new Error(`Import row ${rowNumber}: currency must be GBP or BHD`);
+  if (!amount) throw new Error(`Import row ${rowNumber}: refresh rate before importing BHD amounts`);
+
+  const category = normalizeOption(get("Category"), categories, "Other");
+  const payment = normalizeOption(get("Payment"), payments, "Card");
+  const paidBy = normalizeOption(get("Paid By"), people, "Hasan");
+
+  return {
+    id: crypto.randomUUID(),
+    date,
+    merchant,
+    amount,
+    originalAmount,
+    originalCurrency,
+    paidBy,
+    category,
+    payment,
+    excludeFromBudget: parseYesNo(get("Exclude From Budget")),
+    excludeFromSplit: parseYesNo(get("Do Not Split")),
+    includeEbrahim: parseYesNo(get("Include Ebrahim")),
+    includeMariam: parseYesNo(get("Include Mariam")),
+    notes: get("Notes").trim(),
+  };
+}
+
+function normalizeHeader(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeCurrency(value) {
+  const normalized = String(value || "").trim().toUpperCase();
+  return [BASE_CURRENCY, HOME_CURRENCY].includes(normalized) ? normalized : "";
+}
+
+function normalizeOption(value, options, fallback) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return options.find((option) => option.toLowerCase() === normalized) || fallback;
+}
+
+function parseYesNo(value) {
+  return ["yes", "true", "1", "y"].includes(String(value || "").trim().toLowerCase());
 }
 
 async function loadCloudData() {
