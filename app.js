@@ -793,8 +793,8 @@ function renderDirectDebts(expenses) {
           <div class="direct-debt-card-heading">
             <div>
               <span>${escapeHtml(pair.debtor)} owes ${escapeHtml(pair.creditor)}</span>
-              <strong>${pair.settled ? "Settled" : formatHomeMoney(pair.remainingHome, HOME_CURRENCY)}</strong>
-              <small>Original ${formatHomeMoney(pair.originalHome, HOME_CURRENCY)} · Repaid ${formatHomeMoney(pair.repaidHome, HOME_CURRENCY)} · ${pair.items.length} ${pair.items.length === 1 ? "item" : "items"}</small>
+              <strong>${pair.settled ? "Settled" : formatMoney(pair.remainingHome, HOME_CURRENCY)}</strong>
+              <small>Original ${formatMoney(pair.originalHome, HOME_CURRENCY)} · Repaid ${formatMoney(pair.repaidHome, HOME_CURRENCY)} · ${pair.items.length} ${pair.items.length === 1 ? "item" : "items"}</small>
             </div>
             <span class="settlement-badge ${pair.settled ? "settled" : ""}">${pair.settled ? "Settled" : "Open"}</span>
           </div>
@@ -810,7 +810,7 @@ function renderDirectDebts(expenses) {
                       <strong>${escapeHtml(item.merchant)}</strong>
                       <small>${escapeHtml(item.debtor)} owed ${escapeHtml(item.creditor)} · ${escapeHtml(item.reason)}</small>
                     </div>
-                    <span>${formatHomeMoney(item.homeAmount, HOME_CURRENCY)}</span>
+                    <span>${formatMoney(item.homeAmount, HOME_CURRENCY)}</span>
                   </div>
                 `,
               )

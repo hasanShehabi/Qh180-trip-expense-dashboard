@@ -153,8 +153,9 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(logicSource, "function getExactEbrahimShare(expense");
   assertIncludes(logicSource, "\\b(?:ebrahim|berm)\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*BHD\\b");
   assertIncludes(logicSource, "Note exact amount for Ebrahim");
-  assertIncludes(appSource, "Original ${formatHomeMoney(pair.originalHome, HOME_CURRENCY)}");
-  assertIncludes(appSource, "Repaid ${formatHomeMoney(pair.repaidHome, HOME_CURRENCY)}");
+  assertIncludes(appSource, "Original ${formatMoney(pair.originalHome, HOME_CURRENCY)}");
+  assertIncludes(appSource, "Repaid ${formatMoney(pair.repaidHome, HOME_CURRENCY)}");
+  assert.ok(!appSource.includes("formatHomeMoney("));
   assertIncludes(cssSource, ".direct-debt-card");
   assertIncludes(cssSource, ".owed-statement-card");
   assertIncludes(cssSource, ".overview-summary-grid");
