@@ -113,6 +113,8 @@ const els = {
   cardOutstanding: document.querySelector("#cardOutstanding"),
   directDebtList: document.querySelector("#directDebtList"),
   simplifiedDebtList: document.querySelector("#simplifiedDebtList"),
+  owedBreakdownTotal: document.querySelector("#owedBreakdownTotal"),
+  owedBreakdownList: document.querySelector("#owedBreakdownList"),
   settlementViewToggle: document.querySelector(".settlement-view-toggle"),
   repaymentForm: document.querySelector("#repaymentForm"),
   repaymentDate: document.querySelector("#repaymentDate"),
@@ -361,6 +363,7 @@ function render() {
   renderCategoryChart(filteredTotals.byCategory, filteredTotals.totalGbp);
   renderRows(filtered);
   renderDirectDebts(state.expenses);
+  renderOwedBreakdown(state.expenses);
 }
 
 function renderPage() {
@@ -842,6 +845,67 @@ function renderDirectDebts(expenses) {
     : `<div class="empty-state direct-empty">No simplified transfers needed.</div>`;
   renderSettlementView();
   renderRepaymentLog();
+}
+
+function renderOwedBreakdown(expenses) {
+  const direct = getDirectDebts(expenses);
+  const pairs = Object.values(direct.pairs)
+    .filter((pair) => pair.homeAmount > 0.005)
+    .sort((a, b) => a.debtor.localeCompare(b.debtor) || a.creditor.localeCompare(b.creditor));
+  const debtorTotals = pairs.reduce((totals, pair) => {
+    totals[pair.debtor] = (totals[pair.debtor] || 0) + pair.homeAmount;
+    return totals;
+  }, {});
+
+  els.owedBreakdownTotal.textContent = `${formatMoney(direct.totalOwedHome, HOME_CURRENCY)} total`;
+
+  if (!pairs.length) {
+    els.owedBreakdownList.innerHTML = `<div class="empty-state direct-empty">No itemized owed amounts yet.</div>`;
+    return;
+  }
+
+  els.owedBreakdownList.innerHTML = pairs
+    .map((pair, index) => {
+      const nextPair = pairs[index + 1];
+      const showDebtorTotal = !nextPair || nextPair.debtor !== pair.debtor;
+      return `
+        <article class="owed-statement-card">
+          <div class="owed-statement-heading">
+            <h3>${escapeHtml(pair.debtor)} owes ${escapeHtml(pair.creditor)}: ${formatMoney(pair.homeAmount, HOME_CURRENCY)}</h3>
+          </div>
+          <div class="owed-lines">
+            ${pair.items
+              .map((item) => {
+                const note = getOwedItemNote(item);
+                return `
+                  <div class="owed-line">
+                    <div>
+                      <strong>${escapeHtml(getOwedItemTitle(item))}</strong>
+                      ${note ? `<small>${escapeHtml(note)}</small>` : ""}
+                    </div>
+                    <span>${formatMoney(item.homeAmount, HOME_CURRENCY)}</span>
+                  </div>
+                `;
+              })
+              .join("")}
+          </div>
+          ${showDebtorTotal ? `<div class="owed-person-total">${escapeHtml(pair.debtor)} total owed: ${formatMoney(debtorTotals[pair.debtor], HOME_CURRENCY)}</div>` : ""}
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function getOwedItemTitle(item) {
+  const merchant = item.merchant || "Expense";
+  if (!item.date) return merchant;
+  return `${merchant} on ${formatNumericDate(item.date)}`;
+}
+
+function getOwedItemNote(item) {
+  if (item.notes) return item.notes;
+  if (item.reason === "Note exact amount for Ebrahim") return "Note amount for Ebrahim";
+  return item.reason;
 }
 
 function renderSettlementView() {
@@ -1343,6 +1407,14 @@ function formatDate(date) {
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
+    year: "numeric",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function formatNumericDate(date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
     year: "numeric",
   }).format(new Date(`${date}T00:00:00`));
 }

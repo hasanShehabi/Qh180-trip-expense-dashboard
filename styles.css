@@ -276,6 +276,14 @@ textarea,
   gap: var(--space-3);
 }
 
+.overview-summary-grid {
+  align-items: stretch;
+}
+
+.overview-summary-grid .metric strong {
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+}
+
 .metric {
   position: relative;
   min-height: 8.6rem;
@@ -730,6 +738,10 @@ button:focus-visible,
   grid-column: 1 / -1;
 }
 
+.breakdown-page {
+  grid-column: 1 / -1;
+}
+
 .settlement-page .page-heading {
   margin-bottom: calc(var(--space-2) * -1);
 }
@@ -760,6 +772,73 @@ button:focus-visible,
 .settlement-tools-grid {
   display: grid;
   gap: var(--space-4);
+}
+
+.owed-breakdown-panel {
+  padding: var(--space-4);
+}
+
+.owed-breakdown-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.owed-statement-card {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  padding: var(--space-4);
+}
+
+.owed-statement-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.2;
+}
+
+.owed-lines {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.owed-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-2);
+}
+
+.owed-line strong,
+.owed-line small {
+  display: block;
+}
+
+.owed-line strong {
+  color: var(--text);
+  font-size: var(--step-0);
+}
+
+.owed-line small {
+  margin-top: 0.2rem;
+  color: var(--muted);
+}
+
+.owed-line span,
+.owed-person-total {
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.owed-person-total {
+  border-top: 1px solid var(--line-strong);
+  padding-top: var(--space-3);
+  text-align: right;
 }
 
 .card-payoff-grid {
@@ -1283,6 +1362,10 @@ td[data-label="Merchant"] > small {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .overview-summary-grid .metric:last-child {
+    grid-column: 1 / -1;
+  }
+
   .settlement-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1326,6 +1409,14 @@ td[data-label="Merchant"] > small {
 
   .summary-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .overview-summary-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .overview-summary-grid .metric:last-child {
+    grid-column: auto;
   }
 
   .settlement-metrics {

@@ -81,6 +81,9 @@ function expense(overrides) {
   });
   const direct = Logic.getDirectDebts([noteExpense], { exchangeRate: 0.7 });
   assert.equal(round(direct.pairs["Ebrahim->Hasan"].homeAmount), 12.5);
+  assert.equal(direct.pairs["Ebrahim->Hasan"].items[0].date, "2026-06-24");
+  assert.equal(direct.pairs["Ebrahim->Hasan"].items[0].notes, "Ebrahim: 12.5 BHD");
+  assert.equal(direct.pairs["Ebrahim->Hasan"].items[0].reason, "Note exact amount for Ebrahim");
 }
 
 {

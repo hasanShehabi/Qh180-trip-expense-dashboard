@@ -30,6 +30,7 @@
           <button class="active" type="button" data-page-target="overview">Overview</button>
           <button type="button" data-page-target="log">Add</button>
           <button type="button" data-page-target="transactions">Transactions</button>
+          <button type="button" data-page-target="breakdown">Breakdown</button>
           <button type="button" data-page-target="settlements">Owes</button>
         </nav>
       </header>
@@ -163,7 +164,7 @@
         </section>
 
         <section class="dashboard page active" data-page="overview" aria-label="Expense dashboard">
-          <div class="summary-grid">
+          <div class="summary-grid overview-summary-grid">
             <article class="metric metric-primary">
               <span>Total spend</span>
               <strong id="totalSpend">GBP 0.00</strong>
@@ -296,6 +297,20 @@
                 </tbody>
               </table>
             </div>
+          </section>
+        </section>
+
+        <section class="dashboard page breakdown-page" data-page="breakdown" aria-label="Itemized owed breakdown">
+          <div class="section-heading page-heading">
+            <div>
+              <h2>Itemized breakdown</h2>
+              <p>Plain totals by person, with the exact expenses underneath each amount.</p>
+            </div>
+            <span id="owedBreakdownTotal" class="badge">BHD 0.00</span>
+          </div>
+
+          <section class="panel owed-breakdown-panel">
+            <div id="owedBreakdownList" class="owed-breakdown-list"></div>
           </section>
         </section>
 

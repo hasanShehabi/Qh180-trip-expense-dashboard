@@ -76,12 +76,14 @@
       pairs[key].homeAmount += homeAmount;
       pairs[key].items.push({
         expenseId: expense.id,
+        date: expense.date,
         merchant: expense.merchant,
         payment: expense.payment,
         amount,
         homeAmount,
         homeRate,
         reason,
+        notes: expense.notes || "",
       });
       totalOwed += amount;
       totalOwedHome += homeAmount;

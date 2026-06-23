@@ -119,8 +119,13 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(htmlSource, 'data-page-target="overview"');
   assertIncludes(htmlSource, 'data-page-target="log"');
   assertIncludes(htmlSource, 'data-page-target="transactions"');
+  assertIncludes(htmlSource, 'data-page-target="breakdown"');
   assertIncludes(htmlSource, 'data-page-target="settlements"');
   assertIncludes(htmlSource, "Who owes who");
+  assertIncludes(htmlSource, 'data-page="breakdown"');
+  assertIncludes(htmlSource, 'id="owedBreakdownTotal"');
+  assertIncludes(htmlSource, 'id="owedBreakdownList"');
+  assertIncludes(htmlSource, "Itemized breakdown");
   assertIncludes(htmlSource, 'id="directDebtTotal"');
   assertIncludes(htmlSource, 'id="outstandingTotal"');
   assertIncludes(htmlSource, 'id="settledTotal"');
@@ -136,6 +141,9 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(htmlSource, "Record repayment");
   assertIncludes(appSource, "state.activePage = button.dataset.pageTarget");
   assertIncludes(appSource, "function renderDirectDebts(expenses)");
+  assertIncludes(appSource, "function renderOwedBreakdown(expenses)");
+  assertIncludes(appSource, "formatNumericDate(item.date)");
+  assertIncludes(appSource, "${escapeHtml(pair.debtor)} owes ${escapeHtml(pair.creditor)}");
   assertIncludes(logicSource, "function getDirectDebts(expenses");
   assertIncludes(logicSource, "function getNettedDebtPairs(expenses, repayments");
   assertIncludes(logicSource, "function getBalancesFromDebtPairs(pairs)");
@@ -147,6 +155,8 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(appSource, "Original ${formatHomeMoney(pair.originalHome, HOME_CURRENCY)}");
   assertIncludes(appSource, "Repaid ${formatHomeMoney(pair.repaidHome, HOME_CURRENCY)}");
   assertIncludes(cssSource, ".direct-debt-card");
+  assertIncludes(cssSource, ".owed-statement-card");
+  assertIncludes(cssSource, ".overview-summary-grid");
   assertIncludes(cssSource, ".repayment-progress");
   assertIncludes(cssSource, ".layout.single-page-layout");
 });
@@ -240,6 +250,8 @@ test("HTML references expected dashboard IDs", () => {
     "hasanHusainNet",
     "noteAdjustmentTotal",
     "directDebtList",
+    "owedBreakdownTotal",
+    "owedBreakdownList",
     "transactionPageCount",
     "cardPayoffPerson",
     "cardOutstanding",
