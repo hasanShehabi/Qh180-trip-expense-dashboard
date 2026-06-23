@@ -28,9 +28,9 @@
         </div>
         <nav class="page-nav" aria-label="Trip views">
           <button class="active" type="button" data-page-target="overview">Overview</button>
-          <button type="button" data-page-target="log">Log</button>
+          <button type="button" data-page-target="log">Add</button>
           <button type="button" data-page-target="transactions">Transactions</button>
-          <button type="button" data-page-target="settlements">Who owes who</button>
+          <button type="button" data-page-target="settlements">Owes</button>
         </nav>
       </header>
 
@@ -303,10 +303,25 @@
           <div class="section-heading page-heading">
             <div>
               <h2>Who owes who</h2>
-              <p>Direct amounts from each shared payment, including note-based Ebrahim amounts.</p>
+              <p>The itemized owed list is first; switch to simplified for the shortest transfer route.</p>
             </div>
             <span id="directDebtCount" class="badge">No debts</span>
           </div>
+
+          <section class="panel direct-debts-panel">
+            <div class="section-heading">
+              <div>
+                <h2>Itemized owed list</h2>
+                <p class="panel-note">Every person-to-person amount, with the underlying expenses shown inside each card.</p>
+              </div>
+              <div class="settlement-view-toggle" role="group" aria-label="Settlement view">
+                <button class="active" type="button" data-settlement-view="itemized">Itemized</button>
+                <button type="button" data-settlement-view="simplified">Simplified</button>
+              </div>
+            </div>
+            <div id="directDebtList" class="direct-debt-list"></div>
+            <div id="simplifiedDebtList" class="direct-debt-list hidden"></div>
+          </section>
 
           <div class="summary-grid settlement-metrics">
             <article class="metric">
@@ -352,80 +367,70 @@
             </div>
           </section>
 
-          <section class="panel direct-debts-panel">
-            <div class="section-heading">
-              <h2>Direct itemized debts</h2>
-              <div class="settlement-view-toggle" role="group" aria-label="Settlement view">
-                <button class="active" type="button" data-settlement-view="itemized">Itemized</button>
-                <button type="button" data-settlement-view="simplified">Simplified</button>
+          <div class="settlement-tools-grid">
+            <section class="panel repayment-panel" aria-labelledby="repayment-title">
+              <div class="section-heading">
+                <div>
+                  <h2 id="repayment-title">Record repayment</h2>
+                  <p class="panel-note">Log money that has already been paid back.</p>
+                </div>
               </div>
-            </div>
-            <div id="directDebtList" class="direct-debt-list"></div>
-            <div id="simplifiedDebtList" class="direct-debt-list hidden"></div>
-          </section>
+              <form id="repaymentForm" class="repayment-form">
+                <div class="two-col">
+                  <label>
+                    <span>Date</span>
+                    <input id="repaymentDate" name="repaymentDate" type="date" required />
+                  </label>
+                  <label>
+                    <span>Amount</span>
+                    <input id="repaymentAmount" name="repaymentAmount" min="0.01" step="0.01" type="number" placeholder="0.00" required />
+                  </label>
+                </div>
+                <div class="three-col">
+                  <label>
+                    <span>From</span>
+                    <select id="repaymentFrom" name="repaymentFrom" required>
+                      <option value="Hasan">Hasan</option>
+                      <option value="Husain">Husain</option>
+                      <option value="Ebrahim">Ebrahim</option>
+                      <option value="Mariam">Mariam</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>To</span>
+                    <select id="repaymentTo" name="repaymentTo" required>
+                      <option value="Hasan">Hasan</option>
+                      <option value="Husain">Husain</option>
+                      <option value="Ebrahim">Ebrahim</option>
+                      <option value="Mariam">Mariam</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Currency</span>
+                    <select id="repaymentCurrency" name="repaymentCurrency" required>
+                      <option value="BHD">BHD</option>
+                      <option value="GBP">GBP</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  <span>Note</span>
+                  <input id="repaymentNote" name="repaymentNote" type="text" placeholder="Bank transfer, cash, benefit..." />
+                </label>
+                <div class="form-actions">
+                  <button class="button primary" type="submit">Save repayment</button>
+                </div>
+              </form>
+            </section>
 
-          <section class="panel repayment-panel" aria-labelledby="repayment-title">
-            <div class="section-heading">
-              <div>
-                <h2 id="repayment-title">Record repayment</h2>
-                <p class="panel-note">Log money that has already been paid back.</p>
+            <section class="panel repayment-log-panel">
+              <div class="section-heading">
+                <h2>Repayment log</h2>
+                <span class="badge">Editable</span>
               </div>
-            </div>
-            <form id="repaymentForm" class="repayment-form">
-              <div class="two-col">
-                <label>
-                  <span>Date</span>
-                  <input id="repaymentDate" name="repaymentDate" type="date" required />
-                </label>
-                <label>
-                  <span>Amount</span>
-                  <input id="repaymentAmount" name="repaymentAmount" min="0.01" step="0.01" type="number" placeholder="0.00" required />
-                </label>
-              </div>
-              <div class="three-col">
-                <label>
-                  <span>From</span>
-                  <select id="repaymentFrom" name="repaymentFrom" required>
-                    <option value="Hasan">Hasan</option>
-                    <option value="Husain">Husain</option>
-                    <option value="Ebrahim">Ebrahim</option>
-                    <option value="Mariam">Mariam</option>
-                  </select>
-                </label>
-                <label>
-                  <span>To</span>
-                  <select id="repaymentTo" name="repaymentTo" required>
-                    <option value="Hasan">Hasan</option>
-                    <option value="Husain">Husain</option>
-                    <option value="Ebrahim">Ebrahim</option>
-                    <option value="Mariam">Mariam</option>
-                  </select>
-                </label>
-                <label>
-                  <span>Currency</span>
-                  <select id="repaymentCurrency" name="repaymentCurrency" required>
-                    <option value="BHD">BHD</option>
-                    <option value="GBP">GBP</option>
-                  </select>
-                </label>
-              </div>
-              <label>
-                <span>Note</span>
-                <input id="repaymentNote" name="repaymentNote" type="text" placeholder="Bank transfer, cash, benefit..." />
-              </label>
-              <div class="form-actions">
-                <button class="button primary" type="submit">Save repayment</button>
-              </div>
-            </form>
-          </section>
-
-          <section class="panel repayment-log-panel">
-            <div class="section-heading">
-              <h2>Repayment log</h2>
-              <span class="badge">Editable</span>
-            </div>
-            <div id="repaymentLog" class="repayment-log"></div>
-          </section>
+              <div id="repaymentLog" class="repayment-log"></div>
+            </section>
+          </div>
         </section>
       </main>
     </div>
