@@ -113,6 +113,25 @@ test("retains equal split settlement logic", () => {
   assertIncludes(htmlSource, "Net settle up");
 });
 
+test("shows direct itemized settlement page with note-based Ebrahim amounts", () => {
+  assertIncludes(htmlSource, 'class="page-nav"');
+  assertIncludes(htmlSource, 'data-page-target="expenses"');
+  assertIncludes(htmlSource, 'data-page-target="settlements"');
+  assertIncludes(htmlSource, "Who owes who");
+  assertIncludes(htmlSource, 'id="directDebtTotal"');
+  assertIncludes(htmlSource, 'id="hasanHusainNet"');
+  assertIncludes(htmlSource, 'id="noteAdjustmentTotal"');
+  assertIncludes(htmlSource, 'id="directDebtList"');
+  assertIncludes(appSource, "state.activePage = button.dataset.pageTarget");
+  assertIncludes(appSource, "function renderDirectDebts(expenses)");
+  assertIncludes(appSource, "function getDirectDebts(expenses)");
+  assertIncludes(appSource, "function getExactEbrahimShare(expense)");
+  assertIncludes(appSource, '/(ebrahim|berm)/i.test(notes)');
+  assertIncludes(appSource, "Note exact amount for Ebrahim");
+  assertIncludes(cssSource, ".direct-debt-card");
+  assertIncludes(cssSource, ".layout.settlement-layout .entry-panel");
+});
+
 test("supports payments that do not need to be split", () => {
   assertIncludes(htmlSource, 'id="excludeFromSplit"');
   assertIncludes(htmlSource, "Do not split this payment");
@@ -173,6 +192,10 @@ test("HTML references expected dashboard IDs", () => {
     "importExcelFile",
     "exportExcel",
     "downloadTemplate",
+    "directDebtTotal",
+    "hasanHusainNet",
+    "noteAdjustmentTotal",
+    "directDebtList",
     "totalSpend",
     "homeSpend",
     "hasanPaid",
@@ -243,20 +266,19 @@ test("keeps mobile expense modal support", () => {
   assertIncludes(cssSource, "z-index: 1000");
 });
 
-test("keeps theme media query listener from breaking older mobile browsers", () => {
-  assertIncludes(appSource, "const colorSchemeQuery = window.matchMedia");
-  assertIncludes(appSource, "if (colorSchemeQuery.addEventListener)");
-  assertIncludes(appSource, "colorSchemeQuery.addListener(handleColorSchemeChange)");
-});
-
-test("uses soft light mode with compact cloud-only header", () => {
+test("uses simple fixed light mode with compact cloud-only header", () => {
   assertIncludes(cssSource, "color-scheme: light");
-  assertIncludes(cssSource, "--bg: #edf1ec");
-  assertIncludes(cssSource, "--surface: #f8f5ef");
+  assertIncludes(cssSource, "--bg: #f7f8fb");
+  assertIncludes(cssSource, "--surface: #ffffff");
+  assertIncludes(htmlSource, '<html lang="en" data-theme="light">');
+  assertIncludes(appSource, 'applyTheme("light")');
+  assertIncludes(appSource, 'const next = "light"');
   assertIncludes(htmlSource, "<title>Trip Expenses</title>");
   assertIncludes(htmlSource, '<header class="topbar">');
   assertIncludes(htmlSource, 'id="cloudStatus" aria-live="polite"');
   assert.ok(!htmlSource.includes('id="themeToggle"'));
+  assert.ok(!cssSource.includes("prefers-color-scheme: dark"));
+  assert.ok(!cssSource.includes('data-theme="dark"'));
   assert.ok(!htmlSource.includes("<h1>Trip Expenses</h1>"));
   assert.ok(!htmlSource.includes("UK trip tracker"));
   assert.ok(!htmlSource.includes("<h1>Hasan & Husain Expenses</h1>"));

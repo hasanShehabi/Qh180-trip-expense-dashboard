@@ -1,16 +1,14 @@
 <!doctype html>
-<html lang="en" data-theme="auto">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#eef3f8" />
     <title>Trip Expenses</title>
     <script>
-      // Apply saved theme before paint to avoid a flash of the wrong mode.
       (function () {
         try {
-          var saved = localStorage.getItem("ukTripTheme.v1");
-          document.documentElement.setAttribute("data-theme", saved || "auto");
+          document.documentElement.setAttribute("data-theme", "light");
         } catch (e) {}
       })();
     </script>
@@ -28,9 +26,13 @@
         <div class="trip-meta" aria-label="Sync status">
           <span id="cloudStatus" aria-live="polite">Cloud sync ready</span>
         </div>
+        <nav class="page-nav" aria-label="Trip views">
+          <button class="active" type="button" data-page-target="expenses">Expenses</button>
+          <button type="button" data-page-target="settlements">Who owes who</button>
+        </nav>
       </header>
 
-      <main class="layout">
+      <main class="layout" id="mainLayout">
         <section class="entry-panel" aria-labelledby="entry-title">
           <div class="section-heading">
             <h2 id="entry-title">Log an expense</h2>
@@ -158,7 +160,7 @@
           </div>
         </section>
 
-        <section class="dashboard" aria-label="Expense dashboard">
+        <section class="dashboard page active" data-page="expenses" aria-label="Expense dashboard">
           <div class="summary-grid">
             <article class="metric metric-primary">
               <span>Total spend</span>
@@ -285,6 +287,42 @@
                 </tbody>
               </table>
             </div>
+          </section>
+        </section>
+
+        <section class="dashboard page settlement-page" data-page="settlements" aria-label="Direct settlement details">
+          <div class="section-heading page-heading">
+            <div>
+              <h2>Who owes who</h2>
+              <p>Direct amounts from each shared payment, including note-based Ebrahim amounts.</p>
+            </div>
+            <span id="directDebtCount" class="badge">No debts</span>
+          </div>
+
+          <div class="summary-grid settlement-metrics">
+            <article class="metric">
+              <span>Total to collect</span>
+              <strong id="directDebtTotal">BHD 0.00</strong>
+              <small>Direct shares owed to whoever paid</small>
+            </article>
+            <article class="metric">
+              <span>Hasan and Husain net</span>
+              <strong id="hasanHusainNet">Even</strong>
+              <small>After cancelling only their two-way balance</small>
+            </article>
+            <article class="metric">
+              <span>Note adjustments</span>
+              <strong id="noteAdjustmentTotal">BHD 0.00</strong>
+              <small>Exact Ebrahim amounts found in notes</small>
+            </article>
+          </div>
+
+          <section class="panel direct-debts-panel">
+            <div class="section-heading">
+              <h2>Direct itemized debts</h2>
+              <span class="badge">No simplified routing</span>
+            </div>
+            <div id="directDebtList" class="direct-debt-list"></div>
           </section>
         </section>
       </main>

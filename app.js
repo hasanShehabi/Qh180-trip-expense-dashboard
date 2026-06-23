@@ -44,12 +44,16 @@ const state = {
     cloudUpdatedAt: "",
   }),
   filters: { query: "", category: "All", payment: "All", payer: "All" },
+  activePage: "expenses",
   cloud: { ready: false, saving: false },
 };
 
 state.expenses = normalizeExpenses(state.expenses);
 
 const els = {
+  layout: document.querySelector("#mainLayout"),
+  pageNav: document.querySelector(".page-nav"),
+  pages: document.querySelectorAll("[data-page]"),
   form: document.querySelector("#expenseForm"),
   editingId: document.querySelector("#editingId"),
   editingBadge: document.querySelector("#editingBadge"),
@@ -91,6 +95,11 @@ const els = {
   categoryChart: document.querySelector("#categoryChart"),
   expenseRows: document.querySelector("#expenseRows"),
   expenseCount: document.querySelector("#expenseCount"),
+  directDebtCount: document.querySelector("#directDebtCount"),
+  directDebtTotal: document.querySelector("#directDebtTotal"),
+  hasanHusainNet: document.querySelector("#hasanHusainNet"),
+  noteAdjustmentTotal: document.querySelector("#noteAdjustmentTotal"),
+  directDebtList: document.querySelector("#directDebtList"),
   categoryFilter: document.querySelector("#categoryFilter"),
   paymentFilter: document.querySelector("#paymentFilter"),
   payerTabs: document.querySelector(".payer-tabs"),
@@ -108,7 +117,7 @@ const els = {
 init();
 
 function init() {
-  applyTheme(getSavedTheme());
+  applyTheme("light");
   els.date.valueAsDate = new Date();
   els.budget.value = state.settings.budget;
   renderFilterOptions();
@@ -142,6 +151,12 @@ function bindEvents() {
   els.expenseModalBackdrop.addEventListener("click", () => {
     resetForm();
     closeExpenseModal();
+  });
+  els.pageNav.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-page-target]");
+    if (!button) return;
+    state.activePage = button.dataset.pageTarget;
+    renderPage();
   });
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
@@ -273,10 +288,22 @@ function render() {
   const filtered = getFilteredExpenses();
   const totals = getTotals(state.expenses);
   const filteredTotals = getTotals(filtered);
+  renderPage();
   renderMetrics(totals);
   renderPayerTabs();
   renderCategoryChart(filteredTotals.byCategory, filteredTotals.totalGbp);
   renderRows(filtered);
+  renderDirectDebts(state.expenses);
+}
+
+function renderPage() {
+  els.pages.forEach((page) => {
+    page.classList.toggle("active", page.dataset.page === state.activePage);
+  });
+  els.pageNav.querySelectorAll("button[data-page-target]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.pageTarget === state.activePage);
+  });
+  els.layout.classList.toggle("settlement-layout", state.activePage === "settlements");
 }
 
 function renderMetrics(totals) {
@@ -477,16 +504,11 @@ function closeExpenseModal() {
 }
 
 function getSavedTheme() {
-  try {
-    const saved = localStorage.getItem(THEME_KEY);
-    return THEME_ORDER.includes(saved) ? saved : "auto";
-  } catch {
-    return "auto";
-  }
+  return "light";
 }
 
 function applyTheme(theme) {
-  const next = THEME_ORDER.includes(theme) ? theme : "auto";
+  const next = "light";
   document.documentElement.setAttribute("data-theme", next);
   try {
     localStorage.setItem(THEME_KEY, next);
@@ -503,11 +525,7 @@ function cycleTheme() {
 function updateThemeColorMeta(theme) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) return;
-  const prefersDark =
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const isDark = theme === "dark" || (theme === "auto" && prefersDark);
-  meta.setAttribute("content", isDark ? "#111827" : "#eef3f8");
+  meta.setAttribute("content", "#f7f8fb");
 }
 
 function getFilteredExpenses() {
@@ -650,6 +668,145 @@ function getSettlement(balances) {
       .map(([name, amount]) => `${name} is owed ${formatDisplayMoney(amount)}`)
       .join("; "),
   };
+}
+
+function renderDirectDebts(expenses) {
+  const direct = getDirectDebts(expenses);
+  const pairs = Object.values(direct.pairs)
+    .filter((pair) => pair.amount > 0.01)
+    .sort((a, b) => b.amount - a.amount);
+
+  els.directDebtCount.textContent = `${pairs.length} ${pairs.length === 1 ? "debt" : "debts"}`;
+  els.directDebtTotal.textContent = formatHomeMoneyFromGbp(direct.totalOwed);
+  els.noteAdjustmentTotal.textContent = formatHomeMoneyFromGbp(direct.noteAdjustments);
+  els.hasanHusainNet.textContent = getTwoPersonNetLabel(direct.pairs, "Hasan", "Husain");
+
+  if (!pairs.length) {
+    els.directDebtList.innerHTML = `<div class="empty-state direct-empty">No shared debts yet.</div>`;
+    return;
+  }
+
+  els.directDebtList.innerHTML = pairs
+    .map(
+      (pair) => `
+        <article class="direct-debt-card">
+          <div class="direct-debt-card-heading">
+            <div>
+              <span>${escapeHtml(pair.debtor)} owes ${escapeHtml(pair.creditor)}</span>
+              <strong>${formatHomeMoneyFromGbp(pair.amount)}</strong>
+            </div>
+            <small>${pair.items.length} ${pair.items.length === 1 ? "item" : "items"}</small>
+          </div>
+          <div class="direct-debt-items">
+            ${pair.items
+              .map(
+                (item) => `
+                  <div class="direct-debt-item">
+                    <div>
+                      <strong>${escapeHtml(item.merchant)}</strong>
+                      <small>${escapeHtml(item.reason)}</small>
+                    </div>
+                    <span>${formatHomeMoneyFromGbp(item.amount)}</span>
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function getDirectDebts(expenses) {
+  const pairs = {};
+  let totalOwed = 0;
+  let noteAdjustments = 0;
+
+  const addDebt = (debtor, creditor, amount, merchant, reason) => {
+    if (debtor === creditor || amount <= 0) return;
+    const key = `${debtor}->${creditor}`;
+    if (!pairs[key]) {
+      pairs[key] = { debtor, creditor, amount: 0, items: [] };
+    }
+    pairs[key].amount += amount;
+    pairs[key].items.push({ merchant, amount, reason });
+    totalOwed += amount;
+  };
+
+  expenses.forEach((expense) => {
+    const amount = Number(expense.amount) || 0;
+    const paidBy = people.includes(expense.paidBy) ? expense.paidBy : "Hasan";
+    if (!amount || expense.excludeFromSplit) return;
+
+    const exactEbrahimShare = getExactEbrahimShare(expense);
+    if (exactEbrahimShare > 0 && exactEbrahimShare < amount) {
+      const remainingParticipants = getSplitParticipants(expense).filter((person) => person !== "Ebrahim");
+      const remainingAmount = amount - exactEbrahimShare;
+      const remainingShare = remainingParticipants.length ? remainingAmount / remainingParticipants.length : 0;
+      noteAdjustments += exactEbrahimShare;
+      addDebt(
+        "Ebrahim",
+        paidBy,
+        exactEbrahimShare,
+        expense.merchant,
+        `Note exact amount for Ebrahim: ${formatHomeMoneyFromGbp(exactEbrahimShare)}`,
+      );
+      remainingParticipants.forEach((person) => {
+        addDebt(
+          person,
+          paidBy,
+          remainingShare,
+          expense.merchant,
+          `${formatHomeMoneyFromGbp(remainingAmount)} remaining split ${remainingParticipants.length} ways`,
+        );
+      });
+      return;
+    }
+
+    const participants = getSplitParticipants(expense);
+    const share = participants.length ? amount / participants.length : 0;
+    participants.forEach((person) => {
+      addDebt(
+        person,
+        paidBy,
+        share,
+        expense.merchant,
+        `${formatHomeMoneyFromGbp(amount)} split ${participants.length} ways`,
+      );
+    });
+  });
+
+  return { pairs, totalOwed, noteAdjustments };
+}
+
+function getExactEbrahimShare(expense) {
+  const notes = String(expense.notes || "");
+  if (!/(ebrahim|berm)/i.test(notes) || !/\bBHD\b/i.test(notes)) return 0;
+
+  const bhdAmounts = [...notes.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0]));
+  const exactBhd = bhdAmounts.reduce((sum, amount) => sum + amount, 0);
+  const rate = getHomeRateForExpense(expense);
+  return exactBhd && rate ? exactBhd / rate : 0;
+}
+
+function getHomeRateForExpense(expense) {
+  const originalAmount = Number(expense.originalAmount);
+  const amount = Number(expense.amount);
+  if (expense.originalCurrency === HOME_CURRENCY && originalAmount && amount) {
+    return originalAmount / amount;
+  }
+  return Number(state.settings.exchangeRate);
+}
+
+function getTwoPersonNetLabel(pairs, first, second) {
+  const firstOwesSecond = pairs[`${first}->${second}`]?.amount || 0;
+  const secondOwesFirst = pairs[`${second}->${first}`]?.amount || 0;
+  const net = firstOwesSecond - secondOwesFirst;
+  if (Math.abs(net) < 0.01) return "Even";
+  return net > 0
+    ? `${first} owes ${formatHomeMoneyFromGbp(net)}`
+    : `${second} owes ${formatHomeMoneyFromGbp(Math.abs(net))}`;
 }
 
 function persist() {
@@ -1034,6 +1191,11 @@ function formatAlternateMoney(gbpAmount) {
   return rate
     ? `${HOME_CURRENCY}: ${formatMoney(Number(gbpAmount) * rate, HOME_CURRENCY)}`
     : `${HOME_CURRENCY} rate unavailable`;
+}
+
+function formatHomeMoneyFromGbp(gbpAmount) {
+  const rate = Number(state.settings.exchangeRate);
+  return rate ? formatMoney(Number(gbpAmount) * rate, HOME_CURRENCY) : formatDisplayMoney(gbpAmount);
 }
 
 function formatBalance(gbpAmount) {
