@@ -46,7 +46,7 @@ const state = {
   }),
   repayments: normalizeRepayments(loadJson(REPAYMENTS_KEY, [])),
   filters: { query: "", category: "All", payment: "All", payer: "All" },
-  activePage: "expenses",
+  activePage: "overview",
   settlementView: "itemized",
   cloud: { ready: false, saving: false },
 };
@@ -98,6 +98,7 @@ const els = {
   categoryChart: document.querySelector("#categoryChart"),
   expenseRows: document.querySelector("#expenseRows"),
   expenseCount: document.querySelector("#expenseCount"),
+  transactionPageCount: document.querySelector("#transactionPageCount"),
   directDebtCount: document.querySelector("#directDebtCount"),
   directDebtTotal: document.querySelector("#directDebtTotal"),
   outstandingTotal: document.querySelector("#outstandingTotal"),
@@ -369,7 +370,7 @@ function renderPage() {
   els.pageNav.querySelectorAll("button[data-page-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.pageTarget === state.activePage);
   });
-  els.layout.classList.toggle("settlement-layout", state.activePage === "settlements");
+  els.layout.classList.toggle("single-page-layout", state.activePage !== "overview");
 }
 
 function renderMetrics(totals) {
@@ -453,6 +454,7 @@ function renderPayerTabs() {
   const activeLabel = state.filters.payer === "All" ? "All spending" : `${state.filters.payer} paid`;
   const filteredCount = getFilteredExpenses().length;
   els.expenseCount.textContent = `${activeLabel}: ${filteredCount} ${filteredCount === 1 ? "expense" : "expenses"}`;
+  els.transactionPageCount.textContent = `${filteredCount} ${filteredCount === 1 ? "expense" : "expenses"}`;
 
   els.payerTabs.querySelectorAll("button[data-payer]").forEach((button) => {
     button.classList.toggle("active", button.dataset.payer === state.filters.payer);
@@ -538,6 +540,8 @@ function handleRowAction(event) {
   els.includeMariam.checked = Boolean(expense.includeMariam);
   els.notes.value = expense.notes || "";
   els.editingBadge.classList.remove("hidden");
+  state.activePage = "log";
+  renderPage();
   openExpenseModal();
   els.merchant.focus();
 }
@@ -605,6 +609,8 @@ function syncBudgetExclusion() {
 }
 
 function openExpenseModal() {
+  state.activePage = "log";
+  renderPage();
   document.body.classList.add("expense-modal-open");
   window.requestAnimationFrame(() => els.merchant.focus());
 }

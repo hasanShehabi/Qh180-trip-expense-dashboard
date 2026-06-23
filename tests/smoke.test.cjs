@@ -116,7 +116,9 @@ test("retains equal split settlement logic", () => {
 
 test("shows direct itemized settlement page with note-based Ebrahim amounts", () => {
   assertIncludes(htmlSource, 'class="page-nav"');
-  assertIncludes(htmlSource, 'data-page-target="expenses"');
+  assertIncludes(htmlSource, 'data-page-target="overview"');
+  assertIncludes(htmlSource, 'data-page-target="log"');
+  assertIncludes(htmlSource, 'data-page-target="transactions"');
   assertIncludes(htmlSource, 'data-page-target="settlements"');
   assertIncludes(htmlSource, "Who owes who");
   assertIncludes(htmlSource, 'id="directDebtTotal"');
@@ -146,7 +148,7 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(appSource, "Repaid ${formatHomeMoney(pair.repaidHome, HOME_CURRENCY)}");
   assertIncludes(cssSource, ".direct-debt-card");
   assertIncludes(cssSource, ".repayment-progress");
-  assertIncludes(cssSource, ".layout.settlement-layout .entry-panel");
+  assertIncludes(cssSource, ".layout.single-page-layout");
 });
 
 test("tracks repayments locally and in cloud sync", () => {
@@ -238,6 +240,7 @@ test("HTML references expected dashboard IDs", () => {
     "hasanHusainNet",
     "noteAdjustmentTotal",
     "directDebtList",
+    "transactionPageCount",
     "cardPayoffPerson",
     "cardOutstanding",
     "simplifiedDebtList",
@@ -271,6 +274,7 @@ test("keeps mobile transaction card support", () => {
 
 test("shows compact payments first on mobile", () => {
   assertIncludes(htmlSource, 'class="panel payments-panel"');
+  assertIncludes(htmlSource, 'data-page="transactions"');
   assertIncludes(cssSource, ".payments-panel");
   assertIncludes(cssSource, "order: -3");
   assertIncludes(cssSource, 'td[data-label="Payment"]');
@@ -308,6 +312,7 @@ test("keeps mobile expense modal support", () => {
   assertIncludes(cssSource, ".mobile-fab");
   assertIncludes(cssSource, "body.expense-modal-open .entry-panel");
   assert.ok(cssSource.indexOf("body.expense-modal-open .entry-panel") < cssSource.indexOf("@media (max-width: 1099px)"));
+  assertIncludes(cssSource, '.page[data-page="log"].active.entry-panel');
   assertIncludes(cssSource, "body.expense-modal-open .app-shell");
   assertIncludes(cssSource, "z-index: 900");
   assertIncludes(cssSource, "z-index: 1000");

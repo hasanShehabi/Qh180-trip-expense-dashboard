@@ -27,13 +27,15 @@
           <span id="cloudStatus" aria-live="polite">Cloud sync ready</span>
         </div>
         <nav class="page-nav" aria-label="Trip views">
-          <button class="active" type="button" data-page-target="expenses">Expenses</button>
+          <button class="active" type="button" data-page-target="overview">Overview</button>
+          <button type="button" data-page-target="log">Log</button>
+          <button type="button" data-page-target="transactions">Transactions</button>
           <button type="button" data-page-target="settlements">Who owes who</button>
         </nav>
       </header>
 
       <main class="layout" id="mainLayout">
-        <section class="entry-panel" aria-labelledby="entry-title">
+        <section class="entry-panel page" data-page="log" aria-labelledby="entry-title">
           <div class="section-heading">
             <h2 id="entry-title">Log an expense</h2>
             <div class="heading-actions">
@@ -160,7 +162,7 @@
           </div>
         </section>
 
-        <section class="dashboard page active" data-page="expenses" aria-label="Expense dashboard">
+        <section class="dashboard page active" data-page="overview" aria-label="Expense dashboard">
           <div class="summary-grid">
             <article class="metric metric-primary">
               <span>Total spend</span>
@@ -188,13 +190,6 @@
               <small id="settlementDetail">No split needed</small>
             </article>
           </div>
-
-          <nav class="payer-tabs" aria-label="Filter expenses by payer">
-            <button class="active" type="button" data-payer="All">All spending</button>
-            <button type="button" data-payer="Hasan">Hasan paid</button>
-            <button type="button" data-payer="Husain">Husain paid</button>
-            <button type="button" data-payer="Mariam">Mariam paid</button>
-          </nav>
 
           <div class="dashboard-grid">
             <article class="panel category-panel">
@@ -243,13 +238,27 @@
               </article>
             </div>
           </div>
+        </section>
+
+        <section class="dashboard page transactions-page" data-page="transactions" aria-label="Transactions">
+          <div class="section-heading page-heading">
+            <div>
+              <h2>Transactions</h2>
+              <p>Search, filter, edit, import, or export logged expenses.</p>
+            </div>
+            <span id="transactionPageCount" class="badge">0 expenses</span>
+          </div>
+
+          <nav class="payer-tabs" aria-label="Filter expenses by payer">
+            <button class="active" type="button" data-payer="All">All spending</button>
+            <button type="button" data-payer="Hasan">Hasan paid</button>
+            <button type="button" data-payer="Husain">Husain paid</button>
+            <button type="button" data-payer="Mariam">Mariam paid</button>
+          </nav>
 
           <section class="panel payments-panel" aria-labelledby="list-title">
             <div class="section-heading list-heading">
-              <div>
-                <h2 id="list-title">Payments</h2>
-                <p>Search, filter, edit, or remove logged expenses.</p>
-              </div>
+              <h2 id="list-title">Payments</h2>
               <div class="filters">
                 <input id="search" type="search" placeholder="Search merchant or notes" />
                 <select id="categoryFilter">

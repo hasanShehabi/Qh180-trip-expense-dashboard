@@ -221,6 +221,10 @@ textarea,
   align-items: start;
 }
 
+.layout.single-page-layout {
+  grid-template-columns: 1fr;
+}
+
 .dashboard {
   display: grid;
   gap: var(--space-4);
@@ -246,6 +250,8 @@ textarea,
 
 .entry-panel {
   position: relative;
+  width: min(48rem, 100%);
+  margin: 0 auto;
   padding: var(--space-5);
 }
 
@@ -1446,12 +1452,13 @@ td[data-label="Merchant"] > small {
     gap: var(--space-5);
   }
 
-  .layout.settlement-layout {
+  .layout.single-page-layout {
     grid-template-columns: 1fr;
   }
 
-  .layout.settlement-layout .entry-panel {
-    display: none;
+  .layout.single-page-layout .entry-panel {
+    position: relative;
+    top: auto;
   }
 
   .entry-panel {
@@ -1481,7 +1488,7 @@ td[data-label="Merchant"] > small {
 
   .page-nav {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
   }
 
@@ -1599,6 +1606,16 @@ td[data-label="Merchant"] > small {
     overflow-y: auto;
     overscroll-behavior: contain;
     border-radius: var(--radius-xl);
+  }
+
+  .page[data-page="log"].active.entry-panel {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    display: block;
+    max-height: none;
+    overflow: visible;
+    border-radius: var(--radius-lg);
   }
 
   .payments-panel tbody {
