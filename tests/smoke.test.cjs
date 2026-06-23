@@ -221,6 +221,19 @@ test("supports splitting selected bills with Ebrahim and Mariam", () => {
   assertIncludes(appSource, 'const suffix = debtors.length > 1 ? " each" : ""');
 });
 
+test("adds required screenshot expenses without duplicates", () => {
+  assertIncludes(appSource, "const requiredExpenses = [");
+  assertIncludes(appSource, "manual-2026-06-21-ibo-cafe-berm-coffee");
+  assertIncludes(appSource, "manual-2026-06-20-merch-pt-2-berm");
+  assertIncludes(appSource, 'merchant: "ibo cafe"');
+  assertIncludes(appSource, 'merchant: "Merch pt 2"');
+  assertIncludes(appSource, 'notes: "Berm: 2.5 BHD to pay for his coffee"');
+  assertIncludes(appSource, 'notes: "Berm: 22.52 BHD merch items (10.00 + 12.52)"');
+  assertIncludes(appSource, "function ensureRequiredExpenses()");
+  assertIncludes(appSource, "const addedRequiredExpensesOnLoad = ensureRequiredExpenses()");
+  assertIncludes(appSource, "await saveCloudData()");
+});
+
 test("removes retired header action buttons", () => {
   assert.ok(!htmlSource.includes('id="seedDemo"'));
   assert.ok(!htmlSource.includes('id="exportCsv"'));

@@ -24,6 +24,40 @@ const payments = ["Card", "Cash", "Apple Pay", "Bank transfer"];
 const people = ["Hasan", "Husain", "Mariam"];
 const baseSplitPeople = ["Hasan", "Husain"];
 const splitPeople = ["Hasan", "Husain", "Ebrahim", "Mariam"];
+const requiredExpenses = [
+  {
+    id: "manual-2026-06-21-ibo-cafe-berm-coffee",
+    date: "2026-06-21",
+    merchant: "ibo cafe",
+    amount: 21.42,
+    originalAmount: 10.66,
+    originalCurrency: HOME_CURRENCY,
+    paidBy: "Hasan",
+    category: "Food",
+    payment: "Card",
+    excludeFromBudget: false,
+    excludeFromSplit: false,
+    includeEbrahim: false,
+    includeMariam: false,
+    notes: "Berm: 2.5 BHD to pay for his coffee",
+  },
+  {
+    id: "manual-2026-06-20-merch-pt-2-berm",
+    date: "2026-06-20",
+    merchant: "Merch pt 2",
+    amount: 129.7,
+    originalAmount: 64.55,
+    originalCurrency: HOME_CURRENCY,
+    paidBy: "Hasan",
+    category: "Food",
+    payment: "Card",
+    excludeFromBudget: false,
+    excludeFromSplit: false,
+    includeEbrahim: false,
+    includeMariam: false,
+    notes: "Berm: 22.52 BHD merch items (10.00 + 12.52)",
+  },
+];
 
 const categoryHints = [
   { category: "Transport", words: ["tfl", "tube", "uber", "train", "rail", "bus", "taxi", "gatwick", "heathrow"] },
@@ -52,6 +86,7 @@ const state = {
 };
 
 state.expenses = normalizeExpenses(state.expenses);
+const addedRequiredExpensesOnLoad = ensureRequiredExpenses();
 
 const els = {
   layout: document.querySelector("#mainLayout"),
@@ -147,6 +182,7 @@ function init() {
   els.budget.value = state.settings.budget;
   renderFilterOptions();
   bindEvents();
+  if (addedRequiredExpensesOnLoad) persist();
   render();
   loadCloudData().finally(() => refreshExchangeRate({ silent: hasSavedRate() }));
 }
@@ -1204,6 +1240,7 @@ async function loadCloudData() {
     if (hasCloudData) {
       state.expenses = normalizeExpenses(cloudData.expenses);
       state.repayments = normalizeRepayments(cloudData.repayments);
+      const addedRequiredExpenses = ensureRequiredExpenses();
       state.settings = {
         ...state.settings,
         ...(cloudData.settings || {}),
@@ -1214,7 +1251,12 @@ async function loadCloudData() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
       els.budget.value = state.settings.budget || "";
       render();
-      setCloudStatus("Synced");
+      if (addedRequiredExpenses) {
+        setCloudStatus("Added missing rows");
+        await saveCloudData();
+      } else {
+        setCloudStatus("Synced");
+      }
       return;
     }
 
@@ -1284,6 +1326,30 @@ function mergeById(remoteItems, localItems) {
   remoteItems.forEach((item) => merged.set(item.id, item));
   localItems.forEach((item) => merged.set(item.id, item));
   return [...merged.values()];
+}
+
+function ensureRequiredExpenses() {
+  let changed = false;
+
+  requiredExpenses.forEach((requiredExpense) => {
+    const exists = state.expenses.some((expense) => {
+      if (expense.id === requiredExpense.id) return true;
+      return (
+        expense.date === requiredExpense.date &&
+        expense.merchant === requiredExpense.merchant &&
+        expense.paidBy === requiredExpense.paidBy &&
+        Number(expense.originalAmount) === requiredExpense.originalAmount &&
+        expense.originalCurrency === requiredExpense.originalCurrency
+      );
+    });
+    if (!exists) {
+      state.expenses.push({ ...requiredExpense });
+      changed = true;
+    }
+  });
+
+  if (changed) state.expenses = normalizeExpenses(state.expenses);
+  return changed;
 }
 
 function setCloudStatus(message) {

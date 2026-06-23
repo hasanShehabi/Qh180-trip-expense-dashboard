@@ -87,6 +87,22 @@ function expense(overrides) {
 }
 
 {
+  const bermExpense = expense({
+    id: "berm",
+    date: "2026-06-21",
+    merchant: "ibo cafe",
+    amount: 21.42,
+    originalAmount: 10.66,
+    originalCurrency: "BHD",
+    includeEbrahim: false,
+    notes: "Berm: 2.5 BHD to pay for his coffee",
+  });
+  const direct = Logic.getDirectDebts([bermExpense], { exchangeRate: 0.5 });
+  assert.equal(round(direct.pairs["Ebrahim->Hasan"].homeAmount), 2.5);
+  assert.equal(round(direct.pairs["Husain->Hasan"].homeAmount), 4.08);
+}
+
+{
   const cardExpense = expense({
     id: "card",
     amount: 100,
