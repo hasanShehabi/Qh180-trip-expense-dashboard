@@ -4,6 +4,7 @@ const path = require("node:path");
 
 const appDir = path.resolve(__dirname, "..");
 const appSource = fs.readFileSync(path.join(appDir, "app.js"), "utf8");
+const logicSource = fs.readFileSync(path.join(appDir, "logic.js"), "utf8");
 const htmlSource = fs.readFileSync(path.join(appDir, "index.html"), "utf8");
 const cssSource = fs.readFileSync(path.join(appDir, "styles.css"), "utf8");
 
@@ -50,7 +51,7 @@ test("supports prepaid flight and hotel costs outside the spending budget", () =
   assertIncludes(appSource, 'els.category.addEventListener("change", syncBudgetExclusion)');
   assertIncludes(appSource, '["Flight", "Hotel"].includes(els.category.value)');
   assertIncludes(appSource, "const budgetSpend = totals.budgetGbp");
-  assertIncludes(appSource, "summary.excludedGbp += gbp");
+  assertIncludes(logicSource, "summary.excludedGbp += gbp");
   assertIncludes(appSource, "Outside budget");
 });
 
@@ -80,13 +81,13 @@ test("supports entering amounts in GBP or BHD", () => {
 
 test("exports Excel-friendly CSV and template files", () => {
   assertIncludes(htmlSource, 'id="importExcel"');
-  assertIncludes(htmlSource, "Import Excel");
+  assertIncludes(htmlSource, "Import CSV");
   assertIncludes(htmlSource, 'id="importExcelFile"');
   assertIncludes(htmlSource, 'accept=".csv,text/csv"');
   assertIncludes(htmlSource, 'id="exportExcel"');
-  assertIncludes(htmlSource, "Export Excel");
+  assertIncludes(htmlSource, "Export CSV");
   assertIncludes(htmlSource, 'id="downloadTemplate"');
-  assertIncludes(htmlSource, "Excel template");
+  assertIncludes(htmlSource, "CSV template");
   assertIncludes(appSource, 'els.importExcel.addEventListener("click", () => els.importExcelFile.click())');
   assertIncludes(appSource, 'els.importExcelFile.addEventListener("change", importExcel)');
   assertIncludes(appSource, 'els.exportExcel.addEventListener("click", exportExcel)');
@@ -104,9 +105,9 @@ test("exports Excel-friendly CSV and template files", () => {
 
 test("retains equal split settlement logic", () => {
   assertIncludes(appSource, "function getSettlement(balances)");
-  assertIncludes(appSource, "const settlement = getSettlement(totals.balances)");
-  assertIncludes(appSource, "summary.balances[paidBy] = (summary.balances[paidBy] || 0) + gbp");
-  assertIncludes(appSource, "summary.balances[person] = (summary.balances[person] || 0) - share");
+  assertIncludes(appSource, "const settlement = getSettlement(adjustedBalances)");
+  assertIncludes(logicSource, "summary.balances[paidBy] = (summary.balances[paidBy] || 0) + gbp");
+  assertIncludes(logicSource, "summary.balances[person] = (summary.balances[person] || 0) - share");
   assertIncludes(appSource, "summary: `${debtor} owes ${creditor}`");
   assertIncludes(htmlSource, 'id="settlementSummary"');
   assertIncludes(htmlSource, 'id="settlementDetail"');
@@ -119,17 +120,57 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(htmlSource, 'data-page-target="settlements"');
   assertIncludes(htmlSource, "Who owes who");
   assertIncludes(htmlSource, 'id="directDebtTotal"');
+  assertIncludes(htmlSource, 'id="outstandingTotal"');
+  assertIncludes(htmlSource, 'id="settledTotal"');
   assertIncludes(htmlSource, 'id="hasanHusainNet"');
   assertIncludes(htmlSource, 'id="noteAdjustmentTotal"');
   assertIncludes(htmlSource, 'id="directDebtList"');
+  assertIncludes(htmlSource, 'id="repaymentForm"');
+  assertIncludes(htmlSource, 'id="repaymentLog"');
+  assertIncludes(htmlSource, 'id="cardPayoffPerson"');
+  assertIncludes(htmlSource, 'id="cardOutstanding"');
+  assertIncludes(htmlSource, 'id="simplifiedDebtList"');
+  assertIncludes(htmlSource, 'data-settlement-view="simplified"');
+  assertIncludes(htmlSource, "Record repayment");
   assertIncludes(appSource, "state.activePage = button.dataset.pageTarget");
   assertIncludes(appSource, "function renderDirectDebts(expenses)");
-  assertIncludes(appSource, "function getDirectDebts(expenses)");
-  assertIncludes(appSource, "function getExactEbrahimShare(expense)");
-  assertIncludes(appSource, '/(ebrahim|berm)/i.test(notes)');
-  assertIncludes(appSource, "Note exact amount for Ebrahim");
+  assertIncludes(logicSource, "function getDirectDebts(expenses");
+  assertIncludes(logicSource, "function getNettedDebtPairs(expenses, repayments");
+  assertIncludes(logicSource, "function getBalancesFromDebtPairs(pairs)");
+  assertIncludes(logicSource, "function getSimplifiedTransfers(pairs)");
+  assertIncludes(logicSource, "function getCardPayoffSummary(expenses, repayments, person");
+  assertIncludes(logicSource, "function getExactEbrahimShare(expense");
+  assertIncludes(logicSource, "\\b(?:ebrahim|berm)\\s*:\\s*(\\d+(?:\\.\\d+)?)\\s*BHD\\b");
+  assertIncludes(logicSource, "Note exact amount for Ebrahim");
+  assertIncludes(appSource, "Original ${formatHomeMoney(pair.originalHome, HOME_CURRENCY)}");
+  assertIncludes(appSource, "Repaid ${formatHomeMoney(pair.repaidHome, HOME_CURRENCY)}");
   assertIncludes(cssSource, ".direct-debt-card");
+  assertIncludes(cssSource, ".repayment-progress");
   assertIncludes(cssSource, ".layout.settlement-layout .entry-panel");
+});
+
+test("tracks repayments locally and in cloud sync", () => {
+  assertIncludes(appSource, 'const REPAYMENTS_KEY = "ukTripRepayments.v1"');
+  assertIncludes(appSource, "repayments: normalizeRepayments(loadJson(REPAYMENTS_KEY, []))");
+  assertIncludes(appSource, "function saveRepayment(event)");
+  assertIncludes(appSource, "function renderRepaymentLog()");
+  assertIncludes(appSource, "function handleDirectDebtAction(event)");
+  assertIncludes(appSource, "function handleRepaymentLogAction(event)");
+  assertIncludes(appSource, "function normalizeRepayments(repayments)");
+  assertIncludes(appSource, "window.confirm(`Delete ${expense.merchant}?`)");
+  assertIncludes(appSource, 'window.confirm("Delete this repayment?")');
+  assertIncludes(appSource, "localStorage.setItem(REPAYMENTS_KEY, JSON.stringify(state.repayments))");
+  assertIncludes(appSource, "state.repayments = normalizeRepayments(cloudData.repayments)");
+  assertIncludes(appSource, "const hasLocalRepayments = state.repayments.length > 0");
+  assertIncludes(appSource, "const remoteUpdatedAt = remoteData.updatedAt || \"\"");
+  assertIncludes(appSource, "state.expenses = mergeById(normalizeExpenses(remoteData.expenses), state.expenses)");
+  assertIncludes(appSource, "repayments: state.repayments");
+  assertIncludes(appSource, "getBalancesFromDebtPairs(getNettedDebtPairs(state.expenses, state.repayments))");
+  assertIncludes(htmlSource, 'id="repaymentFrom"');
+  assertIncludes(htmlSource, 'id="repaymentTo"');
+  assertIncludes(htmlSource, 'id="repaymentAmount"');
+  assertIncludes(htmlSource, 'id="repaymentCurrency"');
+  assertIncludes(htmlSource, '<option value="Ebrahim">Ebrahim</option>');
 });
 
 test("supports payments that do not need to be split", () => {
@@ -137,8 +178,8 @@ test("supports payments that do not need to be split", () => {
   assertIncludes(htmlSource, "Do not split this payment");
   assertIncludes(appSource, "excludeFromSplit: els.excludeFromSplit.checked");
   assertIncludes(appSource, "excludeFromSplit: Boolean(expense.excludeFromSplit)");
-  assertIncludes(appSource, "summary.splitGbp += gbp");
-  assertIncludes(appSource, "summary.byPayerSplit[paidBy]");
+  assertIncludes(logicSource, "summary.splitGbp += gbp");
+  assertIncludes(logicSource, "summary.byPayerSplit[paidBy]");
   assertIncludes(appSource, "totals.splitGbp ? `${formatDisplayMoney(totals.splitGbp)} split` : \"Each share\"");
   assertIncludes(appSource, "function getExpenseSplitNote(expense)");
   assertIncludes(appSource, "Not split");
@@ -158,10 +199,10 @@ test("supports splitting selected bills with Ebrahim and Mariam", () => {
   assertIncludes(appSource, "includeMariam: els.includeMariam.checked");
   assertIncludes(appSource, "includeEbrahim: Boolean(expense.includeEbrahim)");
   assertIncludes(appSource, "includeMariam: Boolean(expense.includeMariam)");
-  assertIncludes(appSource, "function getSplitParticipants(expense)");
-  assertIncludes(appSource, 'if (expense.includeEbrahim) participants.push("Ebrahim")');
-  assertIncludes(appSource, 'if (expense.includeMariam) participants.push("Mariam")');
-  assertIncludes(appSource, "const share = participants.length ? gbp / participants.length : 0");
+  assertIncludes(logicSource, "function getSplitParticipants(expense)");
+  assertIncludes(logicSource, 'if (expense.includeEbrahim) participants.push("Ebrahim")');
+  assertIncludes(logicSource, 'if (expense.includeMariam) participants.push("Mariam")');
+  assertIncludes(logicSource, "const share = participants.length ? amount / participants.length : 0");
   assertIncludes(appSource, "const debtors = participants.filter((person) => person !== paidBy)");
   assertIncludes(appSource, 'const suffix = debtors.length > 1 ? " each" : ""');
 });
@@ -170,7 +211,6 @@ test("removes retired header action buttons", () => {
   assert.ok(!htmlSource.includes('id="seedDemo"'));
   assert.ok(!htmlSource.includes('id="exportCsv"'));
   assert.ok(!htmlSource.includes("Load sample"));
-  assert.ok(!htmlSource.includes("Export CSV"));
   assert.ok(!appSource.includes("function loadSampleExpenses()"));
   assert.ok(!appSource.includes("function exportCsv()"));
 });
@@ -193,9 +233,16 @@ test("HTML references expected dashboard IDs", () => {
     "exportExcel",
     "downloadTemplate",
     "directDebtTotal",
+    "outstandingTotal",
+    "settledTotal",
     "hasanHusainNet",
     "noteAdjustmentTotal",
     "directDebtList",
+    "cardPayoffPerson",
+    "cardOutstanding",
+    "simplifiedDebtList",
+    "repaymentForm",
+    "repaymentLog",
     "totalSpend",
     "homeSpend",
     "hasanPaid",
@@ -296,7 +343,12 @@ test("keeps Netlify cloud persistence wired", () => {
   assertIncludes(appSource, "function loadCloudData()");
   assertIncludes(appSource, "function saveCloudData()");
   assertIncludes(htmlSource, 'id="cloudStatus"');
+  assertIncludes(htmlSource, '<script src="./logic.js"></script>');
+  assert.ok(!fs.existsSync(path.join(appDir, "smoke.test.cjs")));
   assertIncludes(functionSource, 'import { getStore } from "@netlify/blobs"');
+  assertIncludes(functionSource, "repayments: []");
+  assertIncludes(functionSource, "repayments: Array.isArray(payload.repayments) ? payload.repayments : []");
+  assertIncludes(functionSource, "function normalizeStoredData(data)");
   assertIncludes(functionSource, 'getStore(STORE_NAME)');
   assertIncludes(functionSource, "await store.setJSON(DATA_KEY, data)");
   assertIncludes(netlifyConfig, 'functions = "netlify/functions"');

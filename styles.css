@@ -520,6 +520,12 @@ button:focus-visible,
   gap: var(--space-3);
 }
 
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
 .export-actions {
   display: grid;
   grid-template-columns: 1fr;
@@ -589,6 +595,12 @@ button:focus-visible,
   border-color: var(--brand);
   background: var(--brand);
   color: #ffffff;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
 }
 
 .button.danger {
@@ -720,6 +732,61 @@ button:focus-visible,
   gap: var(--space-3);
 }
 
+.card-payoff-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.card-payoff-grid > div {
+  display: grid;
+  gap: var(--space-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  padding: var(--space-4);
+}
+
+.card-payoff-grid span {
+  color: var(--muted);
+  font-size: var(--step--1);
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.card-payoff-grid strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+}
+
+.settlement-view-toggle {
+  display: inline-flex;
+  gap: var(--space-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  padding: var(--space-1);
+}
+
+.settlement-view-toggle button {
+  min-height: 2rem;
+  border: 0;
+  border-radius: calc(var(--radius-md) - 5px);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--step--1);
+  font-weight: 850;
+  padding: 0 var(--space-3);
+}
+
+.settlement-view-toggle button.active {
+  background: var(--ink);
+  color: #ffffff;
+}
+
 .direct-debt-card {
   display: grid;
   gap: var(--space-3);
@@ -753,13 +820,38 @@ button:focus-visible,
   font-size: var(--step-3);
 }
 
-.direct-debt-card-heading > small {
+.direct-debt-card-heading div > small {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--muted);
+}
+
+.settlement-badge {
   flex: 0 0 auto;
   border-radius: var(--radius-pill);
   background: var(--surface-0);
   color: var(--muted);
   font-weight: 800;
   padding: var(--space-2) var(--space-3);
+}
+
+.settlement-badge.settled {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.repayment-progress {
+  overflow: hidden;
+  height: 0.62rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+}
+
+.repayment-progress div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--success), var(--brand));
+  transition: width 220ms ease;
 }
 
 .direct-debt-items {
@@ -780,6 +872,46 @@ button:focus-visible,
 
 .direct-debt-item span {
   flex: 0 0 auto;
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.direct-debt-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.repayment-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.repayment-log {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.repayment-log-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  padding: var(--space-3);
+}
+
+.repayment-log-row strong,
+.repayment-log-row small {
+  display: block;
+}
+
+.repayment-log-row small {
+  color: var(--muted);
+}
+
+.repayment-log-row span {
   color: var(--ink);
   font-weight: 850;
 }
@@ -1122,10 +1254,15 @@ td[data-label="Merchant"] > small {
   }
 
   .settlement-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-payoff-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .two-col,
+  .three-col,
   .form-actions,
   .rate-card {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1158,6 +1295,10 @@ td[data-label="Merchant"] > small {
   }
 
   .summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .settlement-metrics {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
@@ -1284,6 +1425,18 @@ td[data-label="Merchant"] > small {
   .split-list > div {
     grid-template-columns: 1fr auto;
     align-items: center;
+  }
+
+  .three-col {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .repayment-log-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .card-payoff-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 

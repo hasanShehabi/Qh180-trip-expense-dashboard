@@ -259,9 +259,9 @@
                   <option value="All">All payments</option>
                 </select>
                 <div class="export-actions">
-                  <button class="button secondary" id="importExcel" type="button">Import Excel</button>
-                  <button class="button secondary" id="exportExcel" type="button">Export Excel</button>
-                  <button class="button secondary" id="downloadTemplate" type="button">Excel template</button>
+                  <button class="button secondary" id="importExcel" type="button">Import CSV</button>
+                  <button class="button secondary" id="exportExcel" type="button">Export CSV</button>
+                  <button class="button secondary" id="downloadTemplate" type="button">CSV template</button>
                   <input id="importExcelFile" type="file" accept=".csv,text/csv" class="hidden" />
                 </div>
               </div>
@@ -301,9 +301,14 @@
 
           <div class="summary-grid settlement-metrics">
             <article class="metric">
-              <span>Total to collect</span>
+              <span>Still outstanding</span>
               <strong id="directDebtTotal">BHD 0.00</strong>
-              <small>Direct shares owed to whoever paid</small>
+              <small id="outstandingTotal">BHD 0.00</small>
+            </article>
+            <article class="metric">
+              <span>Settled so far</span>
+              <strong id="settledTotal">BHD 0.00</strong>
+              <small>Recorded repayments against open debts</small>
             </article>
             <article class="metric">
               <span>Hasan and Husain net</span>
@@ -317,12 +322,100 @@
             </article>
           </div>
 
+          <section class="panel card-payoff-panel" aria-labelledby="card-payoff-title">
+            <div class="section-heading">
+              <div>
+                <h2 id="card-payoff-title">Card payoff</h2>
+                <p class="panel-note">See how much of a card bill should come back.</p>
+              </div>
+              <select id="cardPayoffPerson" aria-label="Card payoff person">
+                <option value="Hasan">Hasan</option>
+                <option value="Husain">Husain</option>
+                <option value="Mariam">Mariam</option>
+              </select>
+            </div>
+            <div class="card-payoff-grid">
+              <div><span>Card charged</span><strong id="cardCharged">BHD 0.00</strong></div>
+              <div><span>Own share</span><strong id="cardOwnShare">BHD 0.00</strong></div>
+              <div><span>Reimbursable</span><strong id="cardReimbursable">BHD 0.00</strong></div>
+              <div><span>Repaid so far</span><strong id="cardRepaid">BHD 0.00</strong></div>
+              <div><span>Outstanding</span><strong id="cardOutstanding">BHD 0.00</strong></div>
+            </div>
+          </section>
+
           <section class="panel direct-debts-panel">
             <div class="section-heading">
               <h2>Direct itemized debts</h2>
-              <span class="badge">No simplified routing</span>
+              <div class="settlement-view-toggle" role="group" aria-label="Settlement view">
+                <button class="active" type="button" data-settlement-view="itemized">Itemized</button>
+                <button type="button" data-settlement-view="simplified">Simplified</button>
+              </div>
             </div>
             <div id="directDebtList" class="direct-debt-list"></div>
+            <div id="simplifiedDebtList" class="direct-debt-list hidden"></div>
+          </section>
+
+          <section class="panel repayment-panel" aria-labelledby="repayment-title">
+            <div class="section-heading">
+              <div>
+                <h2 id="repayment-title">Record repayment</h2>
+                <p class="panel-note">Log money that has already been paid back.</p>
+              </div>
+            </div>
+            <form id="repaymentForm" class="repayment-form">
+              <div class="two-col">
+                <label>
+                  <span>Date</span>
+                  <input id="repaymentDate" name="repaymentDate" type="date" required />
+                </label>
+                <label>
+                  <span>Amount</span>
+                  <input id="repaymentAmount" name="repaymentAmount" min="0.01" step="0.01" type="number" placeholder="0.00" required />
+                </label>
+              </div>
+              <div class="three-col">
+                <label>
+                  <span>From</span>
+                  <select id="repaymentFrom" name="repaymentFrom" required>
+                    <option value="Hasan">Hasan</option>
+                    <option value="Husain">Husain</option>
+                    <option value="Ebrahim">Ebrahim</option>
+                    <option value="Mariam">Mariam</option>
+                  </select>
+                </label>
+                <label>
+                  <span>To</span>
+                  <select id="repaymentTo" name="repaymentTo" required>
+                    <option value="Hasan">Hasan</option>
+                    <option value="Husain">Husain</option>
+                    <option value="Ebrahim">Ebrahim</option>
+                    <option value="Mariam">Mariam</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Currency</span>
+                  <select id="repaymentCurrency" name="repaymentCurrency" required>
+                    <option value="BHD">BHD</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                <span>Note</span>
+                <input id="repaymentNote" name="repaymentNote" type="text" placeholder="Bank transfer, cash, benefit..." />
+              </label>
+              <div class="form-actions">
+                <button class="button primary" type="submit">Save repayment</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel repayment-log-panel">
+            <div class="section-heading">
+              <h2>Repayment log</h2>
+              <span class="badge">Editable</span>
+            </div>
+            <div id="repaymentLog" class="repayment-log"></div>
           </section>
         </section>
       </main>
@@ -331,6 +424,7 @@
     <button class="mobile-fab" id="openExpenseModal" type="button" aria-label="Log expense">+</button>
     <div class="modal-backdrop" id="expenseModalBackdrop"></div>
 
+    <script src="./logic.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

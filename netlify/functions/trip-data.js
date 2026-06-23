@@ -5,6 +5,7 @@ const DATA_KEY = "shared-trip-data";
 
 const defaultData = {
   expenses: [],
+  repayments: [],
   settings: {},
   updatedAt: null,
 };
@@ -13,7 +14,7 @@ export default async (request) => {
   const store = getStore(STORE_NAME);
 
   if (request.method === "GET") {
-    const data = (await store.get(DATA_KEY, { type: "json" })) || defaultData;
+    const data = normalizeStoredData((await store.get(DATA_KEY, { type: "json" })) || defaultData);
     return json(data);
   }
 
@@ -38,8 +39,18 @@ export default async (request) => {
 function normalizePayload(payload) {
   return {
     expenses: Array.isArray(payload.expenses) ? payload.expenses : [],
+    repayments: Array.isArray(payload.repayments) ? payload.repayments : [],
     settings: payload.settings && typeof payload.settings === "object" ? payload.settings : {},
     updatedAt: new Date().toISOString(),
+  };
+}
+
+function normalizeStoredData(data) {
+  return {
+    expenses: Array.isArray(data.expenses) ? data.expenses : [],
+    repayments: Array.isArray(data.repayments) ? data.repayments : [],
+    settings: data.settings && typeof data.settings === "object" ? data.settings : {},
+    updatedAt: data.updatedAt || null,
   };
 }
 

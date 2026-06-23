@@ -7,6 +7,6 @@
     "@netlify/blobs": "^8.2.0"
   },
   "scripts": {
-    "test": "node tests/smoke.test.cjs"
+    "test": "node tests/smoke.test.cjs && node tests/logic.test.cjs"
   }
 }
