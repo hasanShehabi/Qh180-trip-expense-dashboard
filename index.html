@@ -245,7 +245,7 @@
           <div class="section-heading page-heading">
             <div>
               <h2>Transactions</h2>
-              <p>Search, filter, edit, import, or export logged expenses.</p>
+              <p>The full expenses table, with filters and CSV tools.</p>
             </div>
             <span id="transactionPageCount" class="badge">0 expenses</span>
           </div>
@@ -318,7 +318,7 @@
           <div class="section-heading page-heading">
             <div>
               <h2>Who owes who</h2>
-              <p>The itemized owed list is first; switch to simplified for the shortest transfer route.</p>
+              <p>Simple settle-up payments after repayments. Use Breakdown for every item.</p>
             </div>
             <span id="directDebtCount" class="badge">No debts</span>
           </div>
@@ -326,16 +326,16 @@
           <section class="panel direct-debts-panel">
             <div class="section-heading">
               <div>
-                <h2>Itemized owed list</h2>
-                <p class="panel-note">Every person-to-person amount, with the underlying expenses shown inside each card.</p>
+                <h2>Settle up</h2>
+                <p class="panel-note">The fewest payments needed after recorded repayments.</p>
               </div>
               <div class="settlement-view-toggle" role="group" aria-label="Settlement view">
-                <button class="active" type="button" data-settlement-view="itemized">Itemized</button>
-                <button type="button" data-settlement-view="simplified">Simplified</button>
+                <button class="active" type="button" data-settlement-view="simplified">Simple</button>
+                <button type="button" data-settlement-view="itemized">Detailed</button>
               </div>
             </div>
-            <div id="directDebtList" class="direct-debt-list"></div>
-            <div id="simplifiedDebtList" class="direct-debt-list hidden"></div>
+            <div id="simplifiedDebtList" class="direct-debt-list"></div>
+            <div id="directDebtList" class="direct-debt-list hidden"></div>
           </section>
 
           <div class="summary-grid settlement-metrics">

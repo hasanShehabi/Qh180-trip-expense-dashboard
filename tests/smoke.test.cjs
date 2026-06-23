@@ -140,6 +140,7 @@ test("shows direct itemized settlement page with note-based Ebrahim amounts", ()
   assertIncludes(htmlSource, 'data-settlement-view="simplified"');
   assertIncludes(htmlSource, "Record repayment");
   assertIncludes(appSource, "state.activePage = button.dataset.pageTarget");
+  assertIncludes(appSource, 'settlementView: "simplified"');
   assertIncludes(appSource, "function renderDirectDebts(expenses)");
   assertIncludes(appSource, "function renderOwedBreakdown(expenses)");
   assertIncludes(appSource, "formatNumericDate(item.date)");
@@ -304,12 +305,18 @@ test("locks mobile viewport zoom and horizontal overflow", () => {
   assertIncludes(cssSource, "max-width: 100vw");
 });
 
-test("keeps desktop payment rows from clipping stacked amounts", () => {
+test("keeps desktop transactions as a readable table", () => {
   assertIncludes(cssSource, "@media (min-width: 1100px)");
-  assertIncludes(cssSource, "flex-direction: column");
+  assertIncludes(cssSource, "display: table");
+  assertIncludes(cssSource, "display: table-header-group");
+  assertIncludes(cssSource, "display: table-row-group");
+  assertIncludes(cssSource, "display: table-cell");
+  assertIncludes(cssSource, "min-width: 66rem");
+  assertIncludes(cssSource, "grid-template-columns: minmax(16rem, 1fr)");
   assertIncludes(cssSource, ".amount-cell br");
   assertIncludes(cssSource, "display: none");
   assertIncludes(cssSource, "@media (min-width: 1440px)");
+  assert.ok(!cssSource.includes("grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr)"));
 });
 
 test("keeps mobile expense modal support", () => {

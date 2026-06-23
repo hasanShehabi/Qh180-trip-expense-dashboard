@@ -146,7 +146,7 @@ textarea,
 }
 
 .app-shell {
-  width: min(1440px, 100%);
+  width: min(1600px, 100%);
   margin: 0 auto;
   padding: var(--space-4);
   animation: page-in 420ms ease;
@@ -220,6 +220,7 @@ textarea,
   grid-template-columns: 1fr;
   gap: var(--space-4);
   align-items: start;
+  width: 100%;
 }
 
 .layout.single-page-layout {
@@ -278,16 +279,18 @@ textarea,
 
 .overview-summary-grid {
   align-items: stretch;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
 .overview-summary-grid .metric strong {
-  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  font-size: clamp(1.35rem, 1.8vw, 1.85rem);
+  overflow-wrap: anywhere;
 }
 
 .metric {
   position: relative;
   min-height: 8.6rem;
-  overflow: hidden;
+  overflow: visible;
   padding: var(--space-5);
   transition:
     transform 180ms ease,
@@ -1114,7 +1117,8 @@ button:focus-visible,
 }
 
 .table-wrap {
-  overflow: visible;
+  overflow-x: auto;
+  width: 100%;
 }
 
 table,
@@ -1412,7 +1416,7 @@ td[data-label="Merchant"] > small {
   }
 
   .overview-summary-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(11rem, 1fr));
   }
 
   .overview-summary-grid .metric:last-child {
@@ -1434,44 +1438,45 @@ td[data-label="Merchant"] > small {
   }
 
   .filters {
-    width: min(40rem, 100%);
+    grid-template-columns: minmax(16rem, 1fr) minmax(10rem, 12rem) minmax(10rem, 12rem) auto;
+    align-items: center;
+    width: 100%;
+  }
+
+  .export-actions {
+    grid-template-columns: repeat(3, max-content);
+    justify-content: end;
+  }
+
+  .export-actions .button {
+    min-width: 6.75rem;
+    padding: 0 var(--space-3);
   }
 
   table {
-    display: block;
+    display: table;
+    min-width: 66rem;
     width: 100%;
   }
 
   thead {
-    display: block;
+    display: table-header-group;
   }
 
   tbody {
-    display: grid;
-    gap: var(--space-2);
+    display: table-row-group;
   }
 
   thead tr,
   tbody tr {
-    display: grid;
-    grid-template-columns:
-      minmax(5.6rem, 0.7fr)
-      minmax(9.5rem, 1.35fr)
-      minmax(6.8rem, 0.82fr)
-      minmax(6.4rem, 0.76fr)
-      minmax(6.8rem, 0.78fr)
-      minmax(9.8rem, 1.18fr)
-      minmax(8.8rem, 1fr);
-    gap: 0;
-    align-items: center;
+    display: table-row;
   }
 
   th,
   td {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    padding: 0.82rem 0.6rem;
+    display: table-cell;
+    padding: 0.85rem 0.75rem;
+    vertical-align: middle;
   }
 
   th {
@@ -1483,22 +1488,18 @@ td[data-label="Merchant"] > small {
   }
 
   tbody tr {
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
     background: color-mix(in srgb, var(--surface-0) 84%, transparent);
-    box-shadow: var(--shadow-xs);
-    overflow: hidden;
-    padding: 0;
+    box-shadow: none;
   }
 
   tbody tr:hover {
-    border-color: var(--line-strong);
-    box-shadow: var(--shadow-soft);
+    background: var(--surface-1);
+    box-shadow: none;
     transform: none;
   }
 
   td {
-    border: 0;
+    border-top: 1px solid var(--line);
     background: transparent;
     text-align: left;
   }
@@ -1513,10 +1514,6 @@ td[data-label="Merchant"] > small {
   }
 
   .amount-cell {
-    align-items: flex-end;
-    flex-direction: column;
-    gap: 0.15rem;
-    justify-content: flex-end;
     text-align: right;
   }
 
@@ -1568,7 +1565,6 @@ td[data-label="Merchant"] > small {
 
 @media (min-width: 1440px) {
   .layout {
-    grid-template-columns: minmax(21rem, 25rem) minmax(0, 1fr);
     gap: var(--space-5);
   }
 
@@ -1576,14 +1572,9 @@ td[data-label="Merchant"] > small {
     grid-template-columns: 1fr;
   }
 
-  .layout.single-page-layout .entry-panel {
+  .entry-panel {
     position: relative;
     top: auto;
-  }
-
-  .entry-panel {
-    position: sticky;
-    top: var(--space-5);
   }
 }
 

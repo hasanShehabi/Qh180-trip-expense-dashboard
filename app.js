@@ -47,7 +47,7 @@ const state = {
   repayments: normalizeRepayments(loadJson(REPAYMENTS_KEY, [])),
   filters: { query: "", category: "All", payment: "All", payer: "All" },
   activePage: "overview",
-  settlementView: "itemized",
+  settlementView: "simplified",
   cloud: { ready: false, saving: false },
 };
 
